@@ -97,7 +97,7 @@ Tu proyecto solo contendrá `.prd-config.json` (opcional) y `.prd-sessions/` (ge
 ./install.sh
 ```
 
-El instalador copia automáticamente todo a `~/.config/opencode/`, hace backup de `AGENTS.md` si ya existe, verifica la instalación y ofrece correr `pytest` si está disponible.
+El instalador detecta instalaciones previas y ofrece un menú interactivo (actualizar todo, uno por uno, o seleccionar componentes). Crea un respaldo completo `.tar.gz` antes de cualquier cambio, verifica la instalación y ofrece correr `pytest` si está disponible.
 
 Para ver opciones avanzadas (`--dry-run`, `--uninstall`, etc.) consulta `INSTALL.md`.
 

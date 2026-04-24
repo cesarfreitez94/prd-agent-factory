@@ -38,16 +38,41 @@ Sessions and configuration live inside each user project:
 ./install.sh
 ```
 
-El script detecta `~/.config/opencode/`, hace backup automático de `AGENTS.md` si ya existe, copia agentes, schemas y templates, y verifica que todo quedó en su lugar.
+El script detecta si ya existe una instalación previa y actúa en consecuencia:
+
+- **Primera vez:** instala todo directamente.
+- **Actualización:** muestra un menú interactivo con 4 opciones.
 
 ### Opciones del instalador
 
 | Flag | Función |
 |---|---|
-| `--dry-run` | Muestra qué haría sin modificar nada |
-| `--skip-backup` | No respalda `AGENTS.md` si ya existe |
-| `--uninstall` | Elimina lo instalado (pide confirmación) |
+| `--dry-run` | Simula la instalación sin modificar nada |
+| `--uninstall` | Elimina la instalación (pide confirmación) |
 | `--help` | Muestra ayuda |
+
+### Actualización interactiva
+
+Cuando detecta una instalación previa, se crea un **respaldo completo** en:
+```
+~/.config/opencode/backup/prd-agent-backup-{timestamp}.tar.gz
+```
+
+Luego se muestra el menú:
+
+| Opción | Descripción |
+|---|---|
+| **1) Actualizar TODO** | Respalda y reemplaza todos los componentes |
+| **2) Revisar uno por uno** | Pregunta `s/N/a/q` por cada componente:<br>`s` = sí, `N` = no, `a` = sí a todo, `q` = cancelar |
+| **3) Seleccionar componentes** | Elige por número qué componentes actualizar |
+| **4) Cancelar** | Sale sin hacer cambios |
+
+### Componentes gestionados
+
+- `AGENTS.md` — reglas globales
+- `agents/` — 6 agentes (spec, prd-intake, prd-planner, prd-interviewer, prd-writer, prd-validator)
+- `schemas/` — 4 JSON schemas para validación en runtime
+- `templates/` — template de `.prd-config.json`
 
 ### Instalación manual (alternativa)
 
