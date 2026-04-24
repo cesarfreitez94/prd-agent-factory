@@ -1,0 +1,281 @@
+{
+  "session_id": "prd-20250422-100000",
+  "generated_at": "2025-04-22T10:02:00Z",
+  "total_questions": 13,
+  "mode": "normal",
+  "questions": [
+    {
+      "id": "Q01",
+      "prd_section": "target_users",
+      "priority": 1,
+      "blocking": true,
+      "batchable": false,
+      "text": "Who is the primary person using this product day-to-day?",
+      "options": [
+        "1. End consumer (B2C)",
+        "2. Business employee (B2B internal tool)",
+        "3. Business operator or admin",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "End consumer (B2C)",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q02",
+      "prd_section": "target_users",
+      "priority": 2,
+      "blocking": true,
+      "batchable": true,
+      "text": "What best describes the user's primary context?",
+      "options": [
+        "1. Urban residential",
+        "2. Suburban residential",
+        "3. Rural",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Urban residential",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q03",
+      "prd_section": "problem_statement",
+      "priority": 3,
+      "blocking": true,
+      "batchable": false,
+      "text": "What is the core problem this product solves?",
+      "options": [
+        "1. Difficulty finding trusted service providers",
+        "2. High cost of existing solutions",
+        "3. Lack of transparency in service delivery",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Difficulty finding trusted service providers",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q04",
+      "prd_section": "strategic_context",
+      "priority": 4,
+      "blocking": true,
+      "batchable": false,
+      "text": "Why is this problem urgent to solve now?",
+      "options": [
+        "1. Market timing / external trend",
+        "2. Regulatory deadline",
+        "3. Internal business pressure",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Market timing / external trend",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q05",
+      "prd_section": "solution_scope",
+      "priority": 5,
+      "blocking": true,
+      "batchable": true,
+      "text": "Which capability is most central to the product?",
+      "options": [
+        "1. Discovery and booking",
+        "2. Real-time tracking",
+        "3. Payment processing",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Discovery and booking",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q06",
+      "prd_section": "functional_requirements",
+      "priority": 6,
+      "blocking": true,
+      "batchable": true,
+      "text": "What is the primary action a user should be able to do?",
+      "options": [
+        "1. Search and filter providers",
+        "2. Schedule a recurring service",
+        "3. Communicate in-app with providers",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Search and filter providers",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q07",
+      "prd_section": "functional_requirements",
+      "priority": 7,
+      "blocking": false,
+      "batchable": true,
+      "text": "Which additional feature is required at launch?",
+      "options": [
+        "1. Push notifications",
+        "2. In-app chat",
+        "3. Photo updates from provider",
+        "4. None of the above"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Push notifications",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q08",
+      "prd_section": "success_metrics",
+      "priority": 8,
+      "blocking": true,
+      "batchable": false,
+      "text": "What is the single most important metric to track success?",
+      "options": [
+        "1. Time to complete core action",
+        "2. User retention rate",
+        "3. Revenue per user",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Time to complete core action",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q09",
+      "prd_section": "constraints_risks",
+      "priority": 9,
+      "blocking": false,
+      "batchable": true,
+      "text": "Which constraint is most likely to impact delivery?",
+      "options": [
+        "1. Regulatory compliance",
+        "2. Platform approval process (iOS/Android)",
+        "3. Third-party API dependency",
+        "4. None of the above"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Regulatory compliance",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q10",
+      "prd_section": "out_of_scope",
+      "priority": 10,
+      "blocking": false,
+      "batchable": false,
+      "text": "Which area should be explicitly excluded from the first version?",
+      "options": [
+        "1. Veterinary services",
+        "2. Pet grooming",
+        "3. Dog training modules",
+        "4. None of the above"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "1",
+      "answer_text": "Veterinary services",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q11",
+      "prd_section": "problem_statement",
+      "priority": 11,
+      "blocking": true,
+      "batchable": false,
+      "text": "How does the user currently solve this problem?",
+      "options": [
+        "1. Manual spreadsheets or notes",
+        "2. Word-of-mouth referrals",
+        "3. Existing competitor app",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "2",
+      "answer_text": "Word-of-mouth referrals",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q12",
+      "prd_section": "solution_scope",
+      "priority": 12,
+      "blocking": true,
+      "batchable": false,
+      "text": "What is the primary platform for the first version?",
+      "options": [
+        "1. iOS native app",
+        "2. Android native app",
+        "3. Responsive web app",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "3",
+      "answer_text": "Responsive web app",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    },
+    {
+      "id": "Q13",
+      "prd_section": "functional_requirements",
+      "priority": 13,
+      "blocking": false,
+      "batchable": true,
+      "text": "Which user authentication method is required at launch?",
+      "options": [
+        "1. Email and password",
+        "2. Social login (Google/Apple)",
+        "3. Phone number OTP",
+        "4. Other (specify)"
+      ],
+      "free_text_if": ["4"],
+      "status": "ANSWERED",
+      "answer": "2",
+      "answer_text": "Social login (Google/Apple)",
+      "congruence_attempts": 0,
+      "skipped_reason": null,
+      "incomplete_reason": null
+    }
+  ]
+}

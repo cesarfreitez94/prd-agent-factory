@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PRD Agent Runtime Structure",
+  "description": "Canonical directory and file layout for PRD Agent sessions inside a user project. All paths are relative to the project root. This schema is the single source of truth for runtime paths and MUST stay in sync with every agent's Context Contract.",
+  "type": "object",
+  "required": ["project_root_files", "prd_sessions_dir", "session_dir", "per_session_files", "naming_conventions", "agent_contracts"],
+  "properties": {
+    "project_root_files": {
+      "type": "object",
+      "description": "Files that live at the root of the user project",
+      "properties": {
+        "prd_config": {
+          "type": "object",
+          "description": "Project-level configuration (copied from templates/.prd-config.json if missing)",
+          "properties": {
+            "path": { "type": "string", "const": "{project-root}/.prd-config.json" },
+            "created_by": { "type": "string", "const": "spec" },
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["spec", "prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "schema_ref": { "type": "string", "const": "templates/.prd-config.json" }
+          }
+        }
+      }
+    },
+    "prd_sessions_dir": {
+      "type": "object",
+      "description": "Top-level sessions container",
+      "properties": {
+        "path": { "type": "string", "const": "{project-root}/.prd-sessions" },
+        "created_by": { "type": "string", "const": "spec" }
+      }
+    },
+    "session_dir": {
+      "type": "object",
+      "description": "Individual session directory",
+      "properties": {
+        "path_pattern": { "type": "string", "const": "{project-root}/.prd-sessions/prd-{YYYYMMDD-HHMMSS}" },
+        "created_by": { "type": "string", "const": "spec" }
+      }
+    },
+    "per_session_files": {
+      "type": "object",
+      "description": "Files created inside each session directory",
+      "properties": {
+        "ledger_json": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string", "const": "{session-dir}/ledger.json" },
+            "created_by": { "type": "string", "const": "prd-intake" },
+            "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "schema_ref": { "type": "string", "const": "schemas/ledger.schema.json" },
+            "backup_files": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Rotating backups maintained by prd-interviewer",
+              "const": ["{session-dir}/ledger.json.bak.1", "{session-dir}/ledger.json.bak.2", "{session-dir}/ledger.json.bak.3"]
+            },
+            "atomic_write": {
+              "type": "object",
+              "properties": {
+                "temp_dir": { "type": "string", "const": "{session-dir}/tmp" },
+                "temp_file": { "type": "string", "const": "{session-dir}/tmp/ledger.json.tmp" },
+                "final_file": { "type": "string", "const": "{session-dir}/ledger.json" }
+              }
+            }
+          }
+        },
+        "questions_json": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string", "const": "{session-dir}/questions.json" },
+            "created_by": { "type": "string", "const": "prd-planner" },
+            "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-planner", "prd-interviewer"] },
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-interviewer"] },
+            "schema_ref": { "type": "string", "const": "schemas/questions.schema.json" },
+            "atomic_write": {
+              "type": "object",
+              "properties": {
+                "temp_dir": { "type": "string", "const": "{session-dir}/tmp" },
+                "temp_file": { "type": "string", "const": "{session-dir}/tmp/questions.json.tmp" },
+                "final_file": { "type": "string", "const": "{session-dir}/questions.json" }
+              }
+            }
+          }
+        },
+        "checkpoint_json": {
+          "type": "object",
+          "description": "Interview resumption checkpoint",
+          "properties": {
+            "path": { "type": "string", "const": "{session-dir}/checkpoint.json" },
+            "created_by": { "type": "string", "const": "prd-interviewer" },
+            "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-interviewer"] },
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["spec"] }
+          }
+        },
+        "session_log": {
+          "type": "object",
+          "description": "Structured text log for observability",
+          "properties": {
+            "path": { "type": "string", "const": "{session-dir}/session.log" },
+            "created_by": { "type": "string", "const": "spec" },
+            "appended_by": { "type": "array", "items": { "type": "string" }, "const": ["spec", "prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "format": { "type": "string", "const": "structured_text" }
+          }
+        },
+        "prd_md": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string", "const": "{session-dir}/prd.md" },
+            "created_by": { "type": "string", "const": "prd-writer" },
+            "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-writer"] },
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-validator"] }
+          }
+        },
+        "prd_versioned": {
+          "type": "object",
+          "description": "Versioned PRD output for significant changes",
+          "properties": {
+            "path_pattern": { "type": "string", "const": "{session-dir}/prd.v{n}.md" },
+            "created_by": { "type": "string", "const": "prd-writer" },
+            "version_trigger": { "type": "string", "const": "significant_change_in_answered_context" }
+          }
+        }
+      }
+    },
+    "per_project_files": {
+      "type": "object",
+      "description": "Files scoped to the project, not a single session",
+      "properties": {
+        "metrics_json": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string", "const": "{project-root}/.prd-sessions/metrics.json" },
+            "created_by": { "type": "string", "const": "spec" },
+            "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["spec"] }
+          }
+        }
+      }
+    },
+    "naming_conventions": {
+      "type": "object",
+      "properties": {
+        "session_id": { "type": "string", "const": "prd-{YYYYMMDD-HHMMSS}" },
+        "backup_rotation": { "type": "integer", "const": 3 },
+        "max_questions_default": { "type": "integer", "const": 15 },
+        "batch_size_default": { "type": "integer", "const": 5 },
+        "retention_days": { "type": "integer", "const": 90 }
+      }
+    },
+    "agent_contracts": {
+      "type": "object",
+      "description": "Summary of which runtime files each agent touches. MUST match the detailed Context Contract inside each agent file.",
+      "properties": {
+        "spec": {
+          "type": "object",
+          "properties": {
+            "creates": { "type": "array", "items": { "type": "string" }, "const": [".prd-sessions/", "{session-dir}/", "{session-dir}/session.log", ".prd-config.json (if missing)", ".prd-sessions/metrics.json"] },
+            "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json", "{session-dir}/ledger.json", "{session-dir}/checkpoint.json"] },
+            "commands": { "type": "array", "items": { "type": "string" }, "const": ["spec sessions list", "spec sessions delete", "spec sessions compare", "spec sessions cleanup", "spec feedback"] }
+          }
+        },
+        "prd-intake": {
+          "type": "object",
+          "properties": {
+            "creates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json"] },
+            "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json"] }
+          }
+        },
+        "prd-planner": {
+          "type": "object",
+          "properties": {
+            "creates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/questions.json"] },
+            "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json", "{session-dir}/ledger.json"] },
+            "updates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json"] }
+          }
+        },
+        "prd-interviewer": {
+          "type": "object",
+          "properties": {
+            "creates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/checkpoint.json", "{session-dir}/tmp/", "{session-dir}/ledger.json.bak.1", "{session-dir}/ledger.json.bak.2", "{session-dir}/ledger.json.bak.3"] },
+            "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json", "{session-dir}/ledger.json", "{session-dir}/questions.json"] },
+            "updates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json", "{session-dir}/questions.json", "{session-dir}/checkpoint.json"] }
+          }
+        },
+        "prd-writer": {
+          "type": "object",
+          "properties": {
+            "creates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/prd.md", "{session-dir}/prd.v{n}.md"] },
+            "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json", "{session-dir}/ledger.json"] },
+            "updates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json"] }
+          }
+        },
+        "prd-validator": {
+          "type": "object",
+          "properties": {
+            "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json", "{session-dir}/prd.md", "{session-dir}/ledger.json"] },
+            "updates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json"] }
+          }
+        }
+      }
+    }
+  }
+}

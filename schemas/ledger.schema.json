@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PRD Session Ledger",
+  "description": "Compressed context state. Written atomically on each interview turn. The PRD Writer reads ONLY this file.",
+  "type": "object",
+  "required": ["session_id", "created_at", "general_summary", "raw_idea_hash", "intake_status", "answered_context", "prd_version", "config_snapshot"],
+  "properties": {
+    "session_id":       { "type": "string", "pattern": "^prd-[0-9]{8}-[0-9]{6}$" },
+    "created_at":       { "type": "string", "format": "date-time" },
+    "general_summary":  { "type": "string", "description": "Max 5 sentences. Zero invented details. Never changes after intake." },
+    "raw_idea_hash":    { "type": "string" },
+    "intake_status":    { "type": "string", "enum": ["PASS", "FAIL", "PENDING"] },
+    "scope_flag":       { "type": ["string", "null"], "enum": ["large", null] },
+    "planning_status":  { "type": ["string", "null"], "enum": ["COMPLETE", "IN_PROGRESS", null] },
+    "total_questions":  { "type": ["integer", "null"] },
+    "interview_status": { "type": ["string", "null"], "enum": ["IN_PROGRESS", "COMPLETE", null] },
+    "progress":         { "type": ["string", "null"], "pattern": "^Q[0-9]+/[0-9]+$" },
+    "answered_context": {
+      "type": "object",
+      "properties": {
+        "target_user":             { "type": ["string", "null"] },
+        "core_problem":            { "type": ["string", "null"] },
+        "solution_shape":          { "type": ["string", "null"] },
+        "business_goal":           { "type": ["string", "null"] },
+        "why_now":                 { "type": ["string", "null"] },
+        "primary_metric":          { "type": ["string", "null"] },
+        "secondary_metrics":       { "type": ["array", "null"], "items": { "type": "string" } },
+        "functional_requirements": { "type": ["array", "null"], "items": { "type": "string" } },
+        "out_of_scope":            { "type": ["array", "null"], "items": { "type": "string" } },
+        "constraints":             { "type": ["array", "null"], "items": { "type": "string" } },
+        "risks":                   { "type": ["array", "null"], "items": { "type": "string" } },
+        "incomplete_questions":    { "type": ["array", "null"], "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "prd_status":      { "type": ["string", "null"], "enum": ["DRAFT", "FINAL", "NEEDS_REVIEW", "BLOCKED", null] },
+    "prd_file":        { "type": ["string", "null"] },
+    "prd_version":     { "type": "integer", "minimum": 1, "default": 1, "description": "Current PRD version number. Incremented by prd-writer on significant changes." },
+    "config_snapshot": {
+      "type": ["object", "null"],
+      "description": "Copy of .prd-config.json active when this session started. Ensures reproducibility.",
+      "properties": {
+        "project_name": { "type": "string" },
+        "models": { "type": "object" },
+        "max_questions": { "type": "integer" },
+        "batch_size": { "type": "integer" },
+        "interaction_language": { "type": "string" },
+        "output_language": { "type": "string" },
+        "enable_semantic_validation": { "type": "boolean" },
+        "retention_days": { "type": "integer" }
+      }
+    },
+    "checkpoint_ref":  {
+      "type": ["string", "null"],
+      "description": "Path to the latest checkpoint.json for this session, relative to project root. Set by prd-interviewer.",
+      "pattern": "^\\.prd-sessions/prd-[0-9]{8}-[0-9]{6}/checkpoint\\.json$"
+    }
+  }
+}

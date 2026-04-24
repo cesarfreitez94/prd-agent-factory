@@ -1,0 +1,1 @@
+I want to build a mobile app that helps dog owners find reliable dog walkers in their neighborhood. The problem is that busy professionals struggle to find trusted walkers quickly, and existing platforms charge high fees. The app should let owners book walkers, track walks in real-time, and pay securely. Target users are urban dog owners aged 25-40 who work full-time.

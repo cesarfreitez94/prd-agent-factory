@@ -1,0 +1,9 @@
+{
+  "project_name": "",
+  "max_questions": 15,
+  "batch_size": 5,
+  "interaction_language": "es",
+  "output_language": "en",
+  "enable_semantic_validation": true,
+  "retention_days": 90
+}

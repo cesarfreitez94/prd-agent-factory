@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+*.egg
+.env
+.venv/
+venv/
+ENV/
+dist/
+build/
+
+# Pytest
+.pytest_cache/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PRD Agent sessions
+.prd-sessions/
+
+# Secrets
+.git.key

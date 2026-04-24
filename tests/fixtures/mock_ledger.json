@@ -1,0 +1,51 @@
+{
+  "session_id": "prd-20250422-100000",
+  "created_at": "2025-04-22T10:00:00Z",
+  "general_summary": "Mobile app connecting urban dog owners with neighborhood dog walkers. Targets busy professionals 25-40 who need trusted, affordable booking, real-time tracking, and secure payments.",
+  "raw_idea_hash": "I want to build a mobile app that helps dog owners find reliable dog walkers in their neighborhood. The problem is that busy pro",
+  "intake_status": "PASS",
+  "scope_flag": null,
+  "planning_status": "COMPLETE",
+  "total_questions": 10,
+  "interview_status": "COMPLETE",
+  "progress": "Q10/10",
+  "answered_context": {
+    "target_user": "Urban dog owners aged 25-40 working full-time",
+    "core_problem": "Busy professionals struggle to find trusted dog walkers quickly and affordably",
+    "solution_shape": "Mobile app for booking, tracking, and paying dog walkers",
+    "business_goal": "Capture 10% of local dog walking market within 6 months",
+    "why_now": "Post-pandemic pet ownership surge and return to office",
+    "primary_metric": "Reduce average booking time from 2 days to 10 minutes",
+    "secondary_metrics": ["Walker retention rate > 80%", "Customer NPS > 50"],
+    "functional_requirements": [
+      "Search and filter walkers by availability and rating",
+      "Real-time GPS tracking during walks",
+      "In-app secure payment processing",
+      "Push notifications for booking confirmations and walk updates"
+    ],
+    "out_of_scope": ["Veterinary services", "Pet grooming", "Dog training modules"],
+    "constraints": ["Must comply with local pet insurance regulations", "iOS and Android support required"],
+    "risks": ["Walker supply shortage during peak hours", "Liability for off-leash incidents"],
+    "incomplete_questions": []
+  },
+  "prd_status": "DRAFT",
+  "prd_file": ".prd-sessions/prd-20250422-100000/prd.md",
+  "prd_version": 1,
+  "config_snapshot": {
+    "project_name": "Dog Walker App",
+    "models": {
+      "intake": "anthropic/claude-sonnet-4-20250514",
+      "planner": "anthropic/claude-sonnet-4-20250514",
+      "interviewer": "anthropic/claude-sonnet-4-20250514",
+      "writer": "anthropic/claude-sonnet-4-20250514",
+      "validator": "anthropic/claude-sonnet-4-20250514"
+    },
+    "max_questions": 15,
+    "batch_size": 5,
+    "interaction_language": "es",
+    "output_language": "en",
+    "enable_semantic_validation": true,
+    "retention_days": 90
+  },
+  "checkpoint_ref": null
+}
