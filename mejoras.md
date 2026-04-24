@@ -12,4 +12,5 @@
 - Se debe validar el trabajo decada agente posterior a el cierre del ciclo, esto para permitir optimizar tiempos, manejo de tokens e interaccion con el usuario
 - el interview genera demasiados tokens, revisar cuando se le pase todo el contexto de las respuestas.
 - Recordar que el prd es agnostico a tecnologias.
-- Revisar flujo de cuando se rechaza un PRD, no esta del todo claro, el orquestador esta trabajando, cuando deberia delegar a ptrp agente
+- Revisar flujo de cuando se rechaza un PRD, no esta del todo claro, el orquestador esta trabajando, cuando deberia delegar a ptr agente
+- Hay un bucle infinito porr el agente valiador que no deja avanzar en las etapas
