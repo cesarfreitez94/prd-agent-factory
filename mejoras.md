@@ -1,0 +1,15 @@
+- el agente busca .prd-config.json, hay que indicarle que esta en la carpeta .config/opencode/template 
+- HAbla mucho, 12mil tokens y no he dado la idea
+- el spec esta trabajando, no debe, aumenta el contexto, debe orquestar otros agentes para que hagan ese trabajo, menciona crear la estructura del proyecto y demas, eso debe hacerlo solo cuando la idea este aprobada, el prd-session esta bien que se cree, pero el agente primario no debe hacer nada, solo delegar funciones.
+- No tengo idea de que esta pasando, o si debo moverm, si bien  indica que esta trabajando el prd-intake pero no indica si debo hacer algo o no.
+- Definir bien el workflow
+- Como se lo que he gastado con todos los agentes.
+- Intake no debe hacer preguntas?
+- El questions.schema.json no lo encuentra, hay que indicar donde lo puede encontrar porque hace una gran busqueda
+- Los agentes hablan mucho, 13-14 k.
+- El interview tarda mucho tiempo entre pregunta y pregunta, se debe lanzar todas las preguntas y luego el flujo de validacion o escritura
+- el raw idea hash corta la idea, no muestra la escencia solo las primeras letras
+- Se debe validar el trabajo decada agente posterior a el cierre del ciclo, esto para permitir optimizar tiempos, manejo de tokens e interaccion con el usuario
+- el interview genera demasiados tokens, revisar cuando se le pase todo el contexto de las respuestas.
+- Recordar que el prd es agnostico a tecnologias.
+- Revisar flujo de cuando se rechaza un PRD, no esta del todo claro, el orquestador esta trabajando, cuando deberia delegar a ptrp agente
