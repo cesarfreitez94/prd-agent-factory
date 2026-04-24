@@ -31,7 +31,27 @@ Sessions and configuration live inside each user project:
 
 ---
 
-## Install
+## Install (automático)
+
+```bash
+# Clona o descarga el repo, luego ejecuta:
+./install.sh
+```
+
+El script detecta `~/.config/opencode/`, hace backup automático de `AGENTS.md` si ya existe, copia agentes, schemas y templates, y verifica que todo quedó en su lugar.
+
+### Opciones del instalador
+
+| Flag | Función |
+|---|---|
+| `--dry-run` | Muestra qué haría sin modificar nada |
+| `--skip-backup` | No respalda `AGENTS.md` si ya existe |
+| `--uninstall` | Elimina lo instalado (pide confirmación) |
+| `--help` | Muestra ayuda |
+
+### Instalación manual (alternativa)
+
+Si prefieres no usar el script:
 
 ```bash
 # 1. Create directory structure

@@ -93,27 +93,23 @@ Tu proyecto solo contendrá `.prd-config.json` (opcional) y `.prd-sessions/` (ge
 ## Instalación
 
 ```bash
-# 1. Crear estructura de directorios
-mkdir -p ~/.config/opencode/agents
-
-# 2. Copiar agentes
-cp agents/*.md ~/.config/opencode/agents/
-
-# 3. Copiar reglas globales
-cp AGENTS.md ~/.config/opencode/AGENTS.md
-
-# 4. Copiar schemas (validación en runtime)
-cp -r schemas/ ~/.config/opencode/schemas/
-
-# 5. Copiar templates (config por defecto)
-cp -r templates/ ~/.config/opencode/templates/
+# Clona o descarga el repo, luego ejecuta:
+./install.sh
 ```
 
-Ver `INSTALL.md` para instrucciones completas, incluyendo:
-- Configuración opcional vía `.prd-config.json`
-- Modo local (Ollama, LM Studio)
-- Múltiples proyectos
-- Tests locales con `pytest`
+El instalador copia automáticamente todo a `~/.config/opencode/`, hace backup de `AGENTS.md` si ya existe, verifica la instalación y ofrece correr `pytest` si está disponible.
+
+Para ver opciones avanzadas (`--dry-run`, `--uninstall`, etc.) consulta `INSTALL.md`.
+
+### Instalación manual (alternativa)
+
+```bash
+mkdir -p ~/.config/opencode/agents
+cp agents/*.md ~/.config/opencode/agents/
+cp AGENTS.md ~/.config/opencode/AGENTS.md
+cp -r schemas/ ~/.config/opencode/schemas/
+cp -r templates/ ~/.config/opencode/templates/
+```
 
 ---
 
