@@ -51,6 +51,10 @@ Pasos específicos o pseudocódigo. Si hay decisiones de diseño que considerar,
 - [ ] `priority:medium` — importante pero puede esperar
 - [ ] `priority:low` — nice to have
 
+## Implementation Status
+
+- [ ] Implementation started
+
 ## Notas adicionales
 
 (any other context, trade-offs considered, related issues, etc.)

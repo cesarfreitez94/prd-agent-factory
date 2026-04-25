@@ -47,7 +47,7 @@
           "properties": {
             "path": { "type": "string", "const": "{session-dir}/ledger.json" },
             "created_by": { "type": "string", "const": "prd-intake" },
-            "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator", "prd-revisor"] },
             "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
             "schema_ref": { "type": "string", "const": "schemas/ledger.schema.json" },
             "backup_files": {
@@ -100,7 +100,7 @@
           "properties": {
             "path": { "type": "string", "const": "{session-dir}/session.log" },
             "created_by": { "type": "string", "const": "spec" },
-            "appended_by": { "type": "array", "items": { "type": "string" }, "const": ["spec", "prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "appended_by": { "type": "array", "items": { "type": "string" }, "const": ["spec", "prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator", "prd-revisor"] },
             "format": { "type": "string", "const": "structured_text" }
           }
         },
@@ -157,6 +157,7 @@
         "search_order": { "type": "array", "items": { "type": "string" }, "const": ["{framework-dir}/schemas/", "{session-dir}/schemas/"] },
         "ledger_schema": { "type": "string", "const": "ledger.schema.json" },
         "questions_schema": { "type": "string", "const": "questions.schema.json" },
+        "checkpoint_schema": { "type": "string", "const": "checkpoint.schema.json" },
         "runtime_schema": { "type": "string", "const": "runtime.schema.json" }
       }
     },
@@ -207,6 +208,15 @@
           "type": "object",
           "properties": {
             "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json", "{session-dir}/prd.md", "{session-dir}/ledger.json"] },
+            "updates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json"] }
+          }
+        },
+        "prd-revisor": {
+          "type": "object",
+          "description": "Not yet implemented — added for schema completeness (Phase 2)",
+          "properties": {
+            "creates": { "type": "array", "items": { "type": "string" }, "const": [] },
+            "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json", "{session-dir}/ledger.json"] },
             "updates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json"] }
           }
         }

@@ -77,6 +77,7 @@ def test_all_agent_paths_declared_in_runtime_schema():
     # Also allow schema references as declared
     declared_paths.add("schemas/ledger.schema.json")
     declared_paths.add("schemas/questions.schema.json")
+    declared_paths.add("schemas/checkpoint.schema.json")
     declared_paths.add("schemas/runtime.schema.json")
 
     undeclared_by_agent = {}

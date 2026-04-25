@@ -27,6 +27,30 @@ You are the **Interviewer** in the PRD pipeline. You run the question loop — o
 - Read config: `{project-root}/.prd-config.json`
 - Log: `{session-dir}/session.log`
 
+## Contract
+
+### Inputs
+- `{session-dir}/ledger.json` — must exist, `planning_status: "COMPLETE"`, `interview_status: null|PENDING|IN_PROGRESS`
+- `{session-dir}/questions.json` — must exist, at least one question with `status: "PENDING"`
+- `{session-dir}/checkpoint.json` (optional) — if exists, resume from `current_question_index`
+- `{project-root}/.prd-config.json` — `batch_size`, `interaction_language`
+
+### Required Input Fields
+- `ledger.json`: `planning_status: "COMPLETE"`, `session_id`
+- `questions.json`: at least one question with `status: "PENDING"`, `mode: "normal"`
+- `.prd-config.json`: `batch_size`
+
+### Outputs
+- Creates: `{session-dir}/checkpoint.json`, `{session-dir}/ledger.json.bak.1`, `.bak.2`, `.bak.3`
+- Updates: `{session-dir}/ledger.json` → `interview_status`, `answered_context`, `progress`, `checkpoint_ref`
+- Updates: `{session-dir}/questions.json` → question `status`, `answer`, `answer_text`
+
+### Output Validation Criteria
+- `ledger.json` must pass schema validation against `schemas/ledger.schema.json` before rename
+- `interview_status` must be one of: `IN_PROGRESS`, `COMPLETE`, `DELTA_COMPLETE`, `INCOMPLETE`
+- `checkpoint.json` must pass schema validation against `schemas/checkpoint.schema.json`
+- All answered questions must have non-null `answer` or `skipped_reason`/`incomplete_reason`
+
 ## Atomic Write & Backup Protocol
 
 Every time you overwrite `ledger.json`:

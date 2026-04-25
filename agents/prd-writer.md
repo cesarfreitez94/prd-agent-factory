@@ -54,6 +54,13 @@ Read `ledger.json → prd_version` (default 1). If significant change:
 
 If this is the first write, `prd.md` is created and `prd_version` stays at 1.
 
+**Atomic write protocol for prd.md:**
+1. Write content to `{session-dir}/tmp/prd.md.tmp`.
+2. On pass: `mv tmp/prd.md.tmp prd.md`.
+3. On fail: stop, report error, do NOT rename.
+
+For versioned files (`prd.v{n}.md`), write directly (no tmp needed — they are archival):
+
 ## Context Contract
 
 **Read:** `{session-dir}/ledger.json` — full content, this is your only input

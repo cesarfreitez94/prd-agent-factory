@@ -61,6 +61,29 @@ Todos los tests deben pasar. Tests skippeados son ok.
 - Usa frontmatter en archivos `.md` de agentes (hidden: true, etc.)
 - JSON schemas van en `schemas/`, nunca inline en agentes
 
+## Regla de implementación
+
+- Todo cambio de código debe estar asociado a un issue GitHub abierto
+- Antes de invocar cualquier subagent o modificar archivos del framework, verificar que existe un issue activo que justifique la acción
+- Si no hay issue, halt y solicitar al usuario que cree uno primero
+- Commits deben seguir el formato: `type: description (Fixes #N)`
+- PRs sin issue asociado serán cerrados sin revisión
+- Excepciones: hotfixes críticos (label `hotfix` + aprobación de 2 maintainers)
+
+## Pre-commit hook
+
+El hook `scripts/validate-commit-issue.sh` valida que el mensaje de commit incluya un número de issue (`#N`). Si no lo tiene, el commit falla.
+
+Para activar el hook:
+```bash
+cp scripts/validate-commit-issue.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
 ## Questions?
 
 Abre un issue con label `question`.
+
+---
+
+created by caflsolution (Fixes #11)

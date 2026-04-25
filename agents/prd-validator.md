@@ -25,6 +25,29 @@ You are the **PRD Validator**. You are a quality gate — you do not rewrite, im
 - Log: `{session-dir}/session.log`
 - Update: `{session-dir}/ledger.json` (prd_status)
 
+## Contract
+
+### Inputs
+- `{session-dir}/prd.md` — must exist, draft PRD text
+- `{session-dir}/ledger.json` → `answered_context` (for cross-checks)
+- `{project-root}/.prd-config.json` — `enable_semantic_validation`
+
+### Required Input Fields
+- `prd.md`: file must exist (validator cannot run on missing file)
+- `ledger.json`: `answered_context` (for semantic validation), `prd_version`
+- `.prd-config.json`: `enable_semantic_validation` (default true)
+
+### Outputs
+- Updates: `{session-dir}/ledger.json` → `prd_status: "FINAL"|"DRAFT"|"NEEDS_REVIEW"|"BLOCKED"`, `revision_count`
+
+### Output Validation Criteria
+- `prd_status` must be terminal (`"FINAL"`, `"BLOCKED"`, `"NEEDS_REVIEW"`) or intermediate (`"DRAFT"` for revision pass)
+- `revision_count` increments only when `prd_status` transitions to a revision state
+- APPROVED (0 failures) → `prd_status: "FINAL"`
+- REVISION (1–3 failures, first time) → `prd_status: "DRAFT"`, `revision_count: 1`
+- REVISION (exhausted, retry_count >= 1) → `prd_status: "NEEDS_REVIEW"`
+- BLOCKED (4+ failures) → `prd_status: "BLOCKED"`
+
 ## Configuration
 
 Read `.prd-config.json`:
@@ -77,6 +100,19 @@ S{n}: {description of misalignment}
 ```
 
 Semantic failures count toward the total failure score.
+
+## Phase 3 — Cross-Artifact Consistency Checks
+
+After syntactic + semantic validation, run these cross-checks before finalizing the result:
+
+1. **Requirement→Story mapping:** Every item in `answered_context.functional_requirements` must map to at least one User Story in the PRD. Unmapped requirements → failure.
+2. **Scope consistency:** No capability in User Stories may contradict an item in `answered_context.out_of_scope`. Contradiction → failure.
+3. **Target user alignment:** The primary persona in Section 3 must be consistent with `answered_context.target_user`.
+
+If any cross-check fails, add a failure entry:
+```
+S{n}: {description of cross-artifact inconsistency}
+```
 
 ## Scoring
 

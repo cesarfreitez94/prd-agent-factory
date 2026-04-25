@@ -31,6 +31,26 @@ Read `.prd-config.json` before generating questions:
 - `batch_size` (default 5) — used to decide how many questions can be marked `batchable: true`.
 - If `.prd-config.json` is invalid or missing required fields, fail immediately with a descriptive error.
 
+## Contract
+
+### Inputs
+- `{session-dir}/ledger.json` — must exist, `intake_status: "PASS"`, `planning_status: null`
+- `{project-root}/.prd-config.json` — `max_questions`, `batch_size`
+
+### Required Input Fields
+- `ledger.json`: `session_id`, `general_summary`, `intake_status: "PASS"`, `planning_status: null`
+- `.prd-config.json`: `max_questions`, `batch_size`
+
+### Outputs
+- Creates: `{session-dir}/questions.json`
+- Updates: `{session-dir}/ledger.json` → `planning_status: "COMPLETE"`, `total_questions`
+
+### Output Validation Criteria
+- `questions.json` must pass schema validation against `schemas/questions.schema.json` before rename
+- `total_questions` must match `questions[].length`
+- All questions must have `status: "PENDING"` initially
+- Each question must have a valid `prd_section` enum value
+
 ## Question Generation Rules
 
 ### Mandatory coverage — each question must map to a PRD section that cannot be written without it:

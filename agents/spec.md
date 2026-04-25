@@ -80,6 +80,25 @@ Pass ONLY what each subagent needs:
 
 Never dump conversation history. The subagents read their own files.
 
+## Contract
+
+### Inputs
+- `{project-root}/.prd-config.json` — project-level config (must exist, all fields required)
+- `{session-dir}/ledger.json` — session state (read for session commands)
+- `{session-dir}/checkpoint.json` — resume state (optional, if exists)
+
+### Required Input Fields
+- `.prd-config.json`: every field present (no partial fallback)
+- `ledger.json`: `session_id`, `interview_status`, `prd_status` (for status queries)
+
+### Outputs
+- Creates: `.prd-sessions/`, `{session-dir}/`, `{session-dir}/session.log`, `.prd-config.json` (if missing), `.prd-sessions/metrics.json`
+- Updates: `.prd-sessions/metrics.json`
+
+### Output Validation Criteria
+- Session directory created only after `prd-intake` returns PASS
+- `.prd-config.json` validated before first session
+
 ## Session Management Commands
 
 When the user invokes any of these, execute directly (do not enter the pipeline):

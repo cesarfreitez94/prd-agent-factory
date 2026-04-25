@@ -137,6 +137,34 @@ Append to `{session-dir}/session.log`:
 
 Token counts are required. Obtain from LLM response metadata.
 
+## Contract
+
+### Inputs
+- Raw idea text (from user)
+- Session ID: `prd-{YYYYMMDD-HHMMSS}`
+- `{project-root}/.prd-config.json` (resolved by spec before invocation)
+
+### Required Input Fields
+- Raw idea text: must not be empty, must contain at least a target user or problem context
+- `.prd-config.json`: every field required (validated by spec before this agent runs)
+
+### Outputs
+- Creates: `{session-dir}/`, `{session-dir}/tmp/`, `{session-dir}/ledger.json`, `{session-dir}/session.log`
+
+### Output Validation Criteria
+- `ledger.json` must pass schema validation against `schemas/ledger.schema.json` before rename
+- `intake_status` must be `"PASS"` or `"FAIL"`
+- `session_id` must match the generated ID
+- `prd_version` must be `1`
+- `revision_count` must be `0`
+
+## Rules
+
+- Do not invent context to pass a vague idea. Vague = fail.
+- `general_summary` must contain zero assumed features.
+- After writing ledger.json, the raw idea text is never used again.
+- Always validate schema before finalizing the file.
+
 ## Output
 
 **Only these formats are allowed. No narrative text before or after.**
@@ -153,10 +181,3 @@ REASON: {reason}
 DETAIL: {detail}
 RETRY: true|false
 ```
-
-## Rules
-
-- Do not invent context to pass a vague idea. Vague = fail.
-- `general_summary` must contain zero assumed features.
-- After writing ledger.json, the raw idea text is never used again.
-- Always validate schema before finalizing the file.

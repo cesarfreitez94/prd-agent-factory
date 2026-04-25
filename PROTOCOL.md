@@ -40,21 +40,37 @@ The framework itself is installed globally (see `INSTALL.md`). The runtime artef
 5. `spec` validates `.prd-config.json` against the template schema. **Missing fields = hard failure** with a descriptive error.
 6. `spec` writes a snapshot of the config into `ledger.json → config_snapshot`.
 
-### 3.2 Atomic Persistence
-Any agent that overwrites `ledger.json` or `questions.json` MUST follow the atomic write protocol:
+### 3.2 Atomic Persistence Protocol
 
+Any agent that overwrites a state file MUST follow the atomic write protocol:
+
+**Standard atomic write (ledger.json, questions.json, checkpoint.json):**
 1. Write to `{session-dir}/tmp/{filename}.tmp`.
-2. Validate the temp file against its JSON schema (`schemas/ledger.schema.json` or `schemas/questions.schema.json`). **Validation is MANDATORY — not optional.**
+2. Validate the temp file against its JSON schema. **Validation is MANDATORY — not optional.**
 3. On validation pass: rename temp file to final destination.
 4. On validation fail: stop and report the error. Do NOT rename. Return an error structured output.
 
+**Atomic write for prd.md:**
+1. Write content to `{session-dir}/tmp/prd.md.tmp`.
+2. On pass: `mv tmp/prd.md.tmp prd.md`.
+3. On fail: stop, report error, do NOT rename.
+
+**Atomic write for session_metrics.json:**
+- This file is incrementally updated (append, not overwrite). Use same atomic write protocol but skip backup rotation (it's append-only for metrics).
+
 ### 3.3 Backup Rotation
-Before overwriting `ledger.json`, `prd-interviewer` MUST:
-1. Copy `ledger.json.bak.2` → `ledger.json.bak.3`
-2. Copy `ledger.json.bak.1` → `ledger.json.bak.2`
+
+Before overwriting `ledger.json`, the writing agent MUST rotate backups:
+1. If `ledger.json.bak.2` exists → copy to `ledger.json.bak.3`
+2. If `ledger.json.bak.1` exists → copy to `ledger.json.bak.2`
 3. Copy current `ledger.json` → `ledger.json.bak.1`
 
 Maximum backups: **3**. Older backups are discarded.
+
+Backup rotation applies only to `ledger.json`. Other files use different strategies:
+- `prd.md` → versioned snapshots (`prd.v1.md`, `prd.v2.md`, ...) instead of backup rotation
+- `checkpoint.json` → overwrite only, no backup (last state is sufficient)
+- `session.log` → append-only, rotation when > 1MB
 
 ### 3.4 Checkpointing
 `prd-interviewer` writes `checkpoint.json` after every answered question:
@@ -79,11 +95,12 @@ If OpenCode closes during an interview, `spec` can detect `interview_status: "IN
 | Agent | Reads | Creates | Updates | Notes |
 |---|---|---|---|---|
 | `spec` | `.prd-config.json`, `{session}/ledger.json`, `{session}/checkpoint.json` | `.prd-sessions/`, `{session}/`, `{session}/session.log`, `.prd-config.json` (if missing), `.prd-sessions/metrics.json` | `.prd-sessions/metrics.json` | Orchestrator. Handles session commands. |
-| `prd-intake` | `.prd-config.json` | `{session}/ledger.json` | — | Validates idea, sanitizes PII. |
-| `prd-planner` | `.prd-config.json`, `{session}/ledger.json` | `{session}/questions.json` | `{session}/ledger.json` | Respects `max_questions` and `batch_size`. |
-| `prd-interviewer` | `.prd-config.json`, `{session}/ledger.json`, `{session}/questions.json` | `{session}/checkpoint.json`, `{session}/tmp/`, `{session}/ledger.json.bak.*` | `{session}/ledger.json`, `{session}/questions.json`, `{session}/checkpoint.json` | Atomic writes, backups, commands (`!back`, `!skip`, `!fast`). |
-| `prd-writer` | `.prd-config.json`, `{session}/ledger.json` | `{session}/prd.md`, `{session}/prd.v{n}.md` | `{session}/ledger.json` | Versioning logic. |
-| `prd-validator` | `.prd-config.json`, `{session}/prd.md`, `{session}/ledger.json` | — | `{session}/ledger.json` | Syntax + semantic checks. |
+| `prd-intake` | `.prd-config.json` | `{session}/ledger.json` | — | Validates idea, sanitizes PII. Atomic write with tmp/. |
+| `prd-planner` | `.prd-config.json`, `{session}/ledger.json` | `{session}/questions.json` | `{session}/ledger.json` | Respects `max_questions` and `batch_size`. Atomic write with tmp/. |
+| `prd-interviewer` | `.prd-config.json`, `{session}/ledger.json`, `{session}/questions.json` | `{session}/checkpoint.json`, `{session}/tmp/`, `{session}/ledger.json.bak.*` | `{session}/ledger.json`, `{session}/questions.json`, `{session}/checkpoint.json` | Atomic writes, backup rotation, checkpoint. |
+| `prd-writer` | `.prd-config.json`, `{session}/ledger.json` | `{session}/prd.md`, `{session}/prd.v{n}.md` | `{session}/ledger.json` | prd.md uses atomic write with tmp/. Versioned snapshots for history. |
+| `prd-validator` | `.prd-config.json`, `{session}/prd.md`, `{session}/ledger.json` | — | `{session}/ledger.json` | Syntax + semantic + cross-artifact checks. |
+| `prd-revisor` | (not yet implemented) | (not yet implemented) | `{session}/ledger.json` | Phase 2: failure classification, retry coordination. |
 
 All agents append to `{session}/session.log`.
 
