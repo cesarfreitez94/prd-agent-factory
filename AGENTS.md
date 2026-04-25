@@ -86,9 +86,16 @@ Do not ask preliminary questions yourself.
 ```
 @prd-intake      → writes ledger.json      → validate schema → if PASS, invoke @prd-planner
 @prd-planner     → writes questions.json   → validate schema → invoke @prd-interviewer
-@prd-interviewer → updates ledger.json     → atomic write + backup + checkpoint → when COMPLETE, invoke @prd-writer
+@prd-interviewer → updates ledger.json     → atomic write + backup + checkpoint → when COMPLETE|DELTA_COMPLETE, invoke @prd-writer
 @prd-writer      → writes prd.md           → versioned if significant change → invoke @prd-validator
-@prd-validator   → validates (syntax + semantic) → report result to user
+@prd-validator   → validates (syntax + semantic + cross-artifact)
+                     → if APPROVED: tell user
+                     → if REVISION: invoke @prd-revisor
+                     → if BLOCKED: tell user
+@prd-revisor     → classify failures → decide path → coordinate improvement cycle
+                     → if MISSING_INFO: invoke @prd-interviewer (delta mode) → @prd-writer → @prd-validator
+                     → if STRUCTURAL/CROSS_ARTIFACT: invoke @prd-writer → @prd-validator
+                     → if SEMANTIC: present options to user
 ```
 
 ## Passing Context to Subagents
@@ -97,9 +104,10 @@ Pass ONLY what each subagent needs:
 
 - `@prd-intake`      → raw idea text + session ID only (`prd-{YYYYMMDD-HHMMSS}`). The session directory is created by intake on PASS.
 - `@prd-planner`     → session dir path only
-- `@prd-interviewer` → session dir path only
+- `@prd-interviewer` → session dir path only (plus resume flag if applicable; delta_mode + target_sections if from revisor)
 - `@prd-writer`      → session dir path only
 - `@prd-validator`   → session dir path only
+- `@prd-revisor`     → session dir path only (reads last_validator_failures, last_failure_types, retry_count from ledger)
 
 Never dump conversation history. The subagents read their own files.
 

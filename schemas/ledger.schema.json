@@ -34,10 +34,45 @@
       },
       "additionalProperties": true
     },
-    "prd_status":      { "type": ["string", "null"], "enum": ["DRAFT", "FINAL", "NEEDS_REVIEW", "BLOCKED", null] },
+    "prd_status":      { "type": ["string", "null"], "enum": ["DRAFT", "VALIDATING", "REVISION", "IMPROVING", "FINAL", "NEEDS_REVIEW", "BLOCKED", null] },
     "prd_file":        { "type": ["string", "null"] },
     "prd_version":     { "type": "integer", "minimum": 1, "default": 1, "description": "Current PRD version number. Incremented by prd-writer on significant changes." },
     "revision_count":  { "type": "integer", "minimum": 0, "default": 0, "description": "Number of times the validator has sent the PRD back to writer for revision. Max 1 revision allowed. After that, BLOCKED." },
+    "retry_count":     { "type": "integer", "minimum": 0, "default": 0, "description": "Number of retry cycles (IMPROVING loops). Max 3 before NEEDS_REVIEW. Each IMPROVING loop increments retry_count." },
+    "retry_limit":     { "type": "integer", "minimum": 1, "const": 3, "description": "Maximum retry cycles before NEEDS_REVIEW. Hardcoded to 3." },
+    "last_validator_failures": {
+      "type": ["array", "null"],
+      "description": "List of failures reported by prd-validator in the last validation run. Each entry contains check_id, description, and failure_type.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check_id": { "type": "string" },
+          "description": { "type": "string" },
+          "failure_type": { "type": "string", "enum": ["MISSING_INFO", "STRUCTURAL", "SEMANTIC", "CROSS_ARTIFACT"] },
+          "location": { "type": "string" }
+        },
+        "required": ["check_id", "description", "failure_type"]
+      }
+    },
+    "last_failure_types": {
+      "type": ["array", "null"],
+      "description": "Failure type categories from last validation. Used by prd-revisor to decide the retry path.",
+      "items": { "type": "string", "enum": ["MISSING_INFO", "STRUCTURAL", "SEMANTIC", "CROSS_ARTIFACT"] }
+    },
+    "semantic_exceptions": {
+      "type": ["array", "null"],
+      "description": "Semantic failures accepted by the user as exceptions. Each entry records the failure_id, description, resolution, and timestamp.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "failure_id": { "type": "string" },
+          "description": { "type": "string" },
+          "resolution": { "type": "string", "enum": ["accepted_by_user", "re_interview", "manual_edit", "abandoned"] },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["failure_id", "description", "resolution", "timestamp"]
+      }
+    },
     "config_snapshot": {
       "type": ["object", "null"],
       "description": "Copy of .prd-config.json active when this session started. Ensures reproducibility.",

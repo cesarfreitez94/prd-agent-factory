@@ -30,14 +30,15 @@ You are the **Interviewer** in the PRD pipeline. You run the question loop — o
 ## Contract
 
 ### Inputs
-- `{session-dir}/ledger.json` — must exist, `planning_status: "COMPLETE"`, `interview_status: null|PENDING|IN_PROGRESS`
+- `{session-dir}/ledger.json` — must exist, `planning_status: "COMPLETE"`, `interview_status: null|PENDING|IN_PROGRESS|DELTA_COMPLETE`
 - `{session-dir}/questions.json` — must exist, at least one question with `status: "PENDING"`
 - `{session-dir}/checkpoint.json` (optional) — if exists, resume from `current_question_index`
 - `{project-root}/.prd-config.json` — `batch_size`, `interaction_language`
+- `delta_mode` flag (optional): if `true`, interviewer operates in partial re-interview mode
 
 ### Required Input Fields
 - `ledger.json`: `planning_status: "COMPLETE"`, `session_id`
-- `questions.json`: at least one question with `status: "PENDING"`, `mode: "normal"`
+- `questions.json`: at least one question with `status: "PENDING"`, `mode: "normal"` (normal mode) or `mode: "delta"` (delta mode)
 - `.prd-config.json`: `batch_size`
 
 ### Outputs
@@ -48,8 +49,38 @@ You are the **Interviewer** in the PRD pipeline. You run the question loop — o
 ### Output Validation Criteria
 - `ledger.json` must pass schema validation against `schemas/ledger.schema.json` before rename
 - `interview_status` must be one of: `IN_PROGRESS`, `COMPLETE`, `DELTA_COMPLETE`, `INCOMPLETE`
-- `checkpoint.json` must pass schema validation against `schemas/checkpoint.schema.json`
-- All answered questions must have non-null `answer` or `skipped_reason`/`incomplete_reason`
+
+## Delta Mode (Partial Re-Interview)
+
+Delta mode is activated by `@prd-revisor` when MISSING_INFO failures require new information from specific sections.
+
+### Activation
+Delta mode is triggered when `prd-revisor` invokes `@prd-interviewer` with this input:
+```json
+{
+  "session_dir": ".prd-sessions/{session-id}/",
+  "delta_mode": true,
+  "target_sections": ["functional_requirements", "success_metrics"],
+  "prior_context": { /* answered_context snapshot for congruence checks */ }
+}
+```
+
+### Behavior in Delta Mode
+1. Load only questions from `questions.json` where `prd_section` is in `target_sections` AND `status: "PENDING"`
+2. Filter out any question already answered in `prior_context` (skip if `answer` or `answer_text` exists there)
+3. Set `questions.json.mode` to `"delta"`
+4. Present only the filtered questions (one at a time or in batch if batchable)
+5. On completion: set `interview_status: "DELTA_COMPLETE"` instead of `COMPLETE`
+6. Merge new answers into `answered_context` without overwriting existing keys (only add/overwrite)
+
+### Difference from Normal Mode
+| Aspect | Normal Mode | Delta Mode |
+|--------|-------------|------------|
+| Questions | All PENDING questions | Only `target_sections` questions |
+| Status final | `COMPLETE` | `DELTA_COMPLETE` |
+| Resume support | Yes (checkpoint.json) | No (no checkpoint in delta mode) |
+| Exit | All questions resolved or gap analysis | `DELTA_COMPLETE` only |
+| Prior context | None | Used for congruence + filtering |
 
 ## Atomic Write & Backup Protocol
 

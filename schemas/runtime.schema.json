@@ -16,7 +16,7 @@
             "path": { "type": "string", "const": "{project-root}/.prd-config.json" },
             "template_source": { "type": "string", "const": "{framework-dir}/templates/.prd-config.json" },
             "created_by": { "type": "string", "const": "spec" },
-            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["spec", "prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["spec", "prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator", "prd-revisor"] },
             "schema_ref": { "type": "string", "const": "templates/.prd-config.json" }
           }
         }
@@ -48,7 +48,7 @@
             "path": { "type": "string", "const": "{session-dir}/ledger.json" },
             "created_by": { "type": "string", "const": "prd-intake" },
             "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator", "prd-revisor"] },
-            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-planner", "prd-interviewer", "prd-writer", "prd-validator", "prd-revisor"] },
             "schema_ref": { "type": "string", "const": "schemas/ledger.schema.json" },
             "backup_files": {
               "type": "array",
@@ -110,7 +110,7 @@
             "path": { "type": "string", "const": "{session-dir}/prd.md" },
             "created_by": { "type": "string", "const": "prd-writer" },
             "updated_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-writer"] },
-            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-validator"] }
+            "read_by": { "type": "array", "items": { "type": "string" }, "const": ["prd-validator", "prd-revisor"] }
           }
         },
         "prd_versioned": {
@@ -145,7 +145,8 @@
         "backup_rotation": { "type": "integer", "const": 3 },
         "max_questions_default": { "type": "integer", "const": 15 },
         "batch_size_default": { "type": "integer", "const": 5 },
-        "retention_days": { "type": "integer", "const": 90 }
+        "retention_days": { "type": "integer", "const": 90 },
+        "retry_limit": { "type": "integer", "const": 3 }
       }
     },
     "schema_resolution": {

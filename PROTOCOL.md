@@ -97,10 +97,10 @@ If OpenCode closes during an interview, `spec` can detect `interview_status: "IN
 | `spec` | `.prd-config.json`, `{session}/ledger.json`, `{session}/checkpoint.json` | `.prd-sessions/`, `{session}/`, `{session}/session.log`, `.prd-config.json` (if missing), `.prd-sessions/metrics.json` | `.prd-sessions/metrics.json` | Orchestrator. Handles session commands. |
 | `prd-intake` | `.prd-config.json` | `{session}/ledger.json` | — | Validates idea, sanitizes PII. Atomic write with tmp/. |
 | `prd-planner` | `.prd-config.json`, `{session}/ledger.json` | `{session}/questions.json` | `{session}/ledger.json` | Respects `max_questions` and `batch_size`. Atomic write with tmp/. |
-| `prd-interviewer` | `.prd-config.json`, `{session}/ledger.json`, `{session}/questions.json` | `{session}/checkpoint.json`, `{session}/tmp/`, `{session}/ledger.json.bak.*` | `{session}/ledger.json`, `{session}/questions.json`, `{session}/checkpoint.json` | Atomic writes, backup rotation, checkpoint. |
+| `prd-interviewer` | `.prd-config.json`, `{session}/ledger.json`, `{session}/questions.json` | `{session}/checkpoint.json`, `{session}/tmp/`, `{session}/ledger.json.bak.*` | `{session}/ledger.json`, `{session}/questions.json`, `{session}/checkpoint.json` | Atomic writes, backup rotation, checkpoint. Supports delta mode. |
 | `prd-writer` | `.prd-config.json`, `{session}/ledger.json` | `{session}/prd.md`, `{session}/prd.v{n}.md` | `{session}/ledger.json` | prd.md uses atomic write with tmp/. Versioned snapshots for history. |
-| `prd-validator` | `.prd-config.json`, `{session}/prd.md`, `{session}/ledger.json` | — | `{session}/ledger.json` | Syntax + semantic + cross-artifact checks. |
-| `prd-revisor` | (not yet implemented) | (not yet implemented) | `{session}/ledger.json` | Phase 2: failure classification, retry coordination. |
+| `prd-validator` | `.prd-config.json`, `{session}/prd.md`, `{session}/ledger.json` | — | `{session}/ledger.json` | Syntax + semantic + cross-artifact checks. Classifies failures by type. |
+| `prd-revisor` | `.prd-config.json`, `{session}/ledger.json`, `{session}/prd.md` | — | `{session}/ledger.json` | Failure classification, retry path decision, retry limit enforcement. Coordinates improvement cycle. |
 
 All agents append to `{session}/session.log`.
 

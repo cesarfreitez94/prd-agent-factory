@@ -113,7 +113,7 @@ def test_all_agents_reference_runtime_schema():
             agents_with_runtime_refs.add(agent_file.name)
 
     # All agents except maybe pure meta docs should reference it
-    expected = {"spec.md", "prd-intake.md", "prd-planner.md", "prd-interviewer.md", "prd-writer.md", "prd-validator.md"}
+    expected = {"spec.md", "prd-intake.md", "prd-planner.md", "prd-interviewer.md", "prd-writer.md", "prd-validator.md", "prd-revisor.md"}
     missing = expected - agents_with_runtime_refs
     assert not missing, f"Agents missing runtime.schema.json reference: {missing}"
 
