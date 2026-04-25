@@ -58,9 +58,7 @@ Before starting any session:
 1. Detect the project root (current working directory where opencode was launched)
 2. Read `.prd-config.json` from project root. If missing, copy `templates/.prd-config.json` and inform the user.
 3. Validate `.prd-config.json` against the template schema. **If any field is missing, fail immediately** with a descriptive error — do not fall back to defaults silently.
-4. Create `.prd-sessions/{session-id}/` if it does not exist
-5. Add `.prd-sessions/` to `.gitignore` if not already present (ask user first)
-6. If a session with `interview_status: "IN_PROGRESS"` and an existing `checkpoint.json` is detected, ask the user: "An interrupted session was found at `.prd-sessions/{session-id}/`. Resume it?"
+4. If a session with `interview_status: "IN_PROGRESS"` and an existing `checkpoint.json` is detected, ask the user: "An interrupted session was found at `.prd-sessions/{session-id}/`. Resume it?"
 
 Generate `session-id` as `prd-{YYYYMMDD-HHMMSS}`.
 
@@ -71,20 +69,15 @@ When the user provides an idea or asks to create a PRD:
 1. Validate `.prd-config.json` as described above.
 2. Generate a session ID: `prd-{YYYYMMDD-HHMMSS}`
 3. Resolve the project root (current working directory)
-4. Create the session directory:
-   ```bash
-   mkdir -p .prd-sessions/{session-id}/tmp
-   ```
-5. Initialize `session.log`:
+4. Initialize `session.log`:
    ```
    [{ISO timestamp}] [INFO] [spec] SESSION_START session={session-id}
    ```
-6. Optionally add `.prd-sessions/` to `.gitignore` (ask user once, remember answer)
-7. Check for interrupted sessions: if any `{project-root}/.prd-sessions/` subdirectory has `ledger.json` with `interview_status: "IN_PROGRESS"` and contains `checkpoint.json`, ask the user:
+5. Check for interrupted sessions: if any `{project-root}/.prd-sessions/` subdirectory has `ledger.json` with `interview_status: "IN_PROGRESS"` and contains `checkpoint.json`, ask the user:
    > "An interrupted session was found at `.prd-sessions/{session-id}/`. Resume it?"
    - If yes: invoke `@prd-interviewer` with session dir path and instruct it to resume from `checkpoint.json`.
    - If no: proceed with new session.
-8. Invoke `@prd-intake` passing: raw idea text + session directory path (`.prd-sessions/{session-id}`)
+6. Invoke `@prd-intake` passing: raw idea text + session ID only. On intake PASS, `prd-intake` creates the session directory as part of writing the initial ledger.
 
 Do not ask preliminary questions yourself.
 
@@ -102,7 +95,7 @@ Do not ask preliminary questions yourself.
 
 Pass ONLY what each subagent needs:
 
-- `@prd-intake`      → raw idea text + session dir path + `.prd-config.json` path
+- `@prd-intake`      → raw idea text + session ID only (`prd-{YYYYMMDD-HHMMSS}`). The session directory is created by intake on PASS.
 - `@prd-planner`     → session dir path only
 - `@prd-interviewer` → session dir path only
 - `@prd-writer`      → session dir path only

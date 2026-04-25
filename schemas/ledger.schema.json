@@ -15,7 +15,7 @@
     "planning_status":  { "type": ["string", "null"], "enum": ["COMPLETE", "IN_PROGRESS", null] },
     "total_questions":  { "type": ["integer", "null"] },
     "interview_status": { "type": ["string", "null"], "enum": ["IN_PROGRESS", "COMPLETE", null] },
-    "progress":         { "type": ["string", "null"], "pattern": "^Q[0-9]+/[0-9]+$" },
+    "progress":         { "type": ["string", "null"], "pattern": "^Q[0-9]+-?[0-9]*/[0-9]+$" },
     "answered_context": {
       "type": "object",
       "properties": {

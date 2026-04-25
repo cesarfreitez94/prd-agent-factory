@@ -162,7 +162,5 @@ Log:
 ```
 [{timestamp}] [INFO] [prd-validator] END result=APPROVED|REVISION|NEEDS_REVIEW|BLOCKED revision_count={n} failures={total} semantic_failures={m} session={session-id}
 ```
-[{timestamp}] [INFO] [prd-validator] END result=APPROVED|REVISION|BLOCKED failures={n} semantic_failures={m} session={session-id}
-```
 
 Output the final status string for `spec` to relay to the user.

@@ -1,5 +1,12 @@
 {
   "project_name": "",
+  "models": {
+    "intake": "anthropic/claude-sonnet-4-20250514",
+    "planner": "anthropic/claude-sonnet-4-20250514",
+    "interviewer": "anthropic/claude-sonnet-4-20250514",
+    "writer": "anthropic/claude-sonnet-4-20250514",
+    "validator": "anthropic/claude-sonnet-4-20250514"
+  },
   "max_questions": 15,
   "batch_size": 5,
   "interaction_language": "es",
