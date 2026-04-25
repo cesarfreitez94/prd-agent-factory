@@ -43,7 +43,7 @@ If any match is found:
 2. Log a warning to `session.log`: `[WARN] [prd-intake] PII_DETECTED session={session-id} type={matched_type}`
 3. Continue processing with sanitized text. Do NOT prompt the user.
 
-**This agent is silent about PII. It redacts and continues.**
+**This agent is silent about PII. It redacts and continues. Zero user-facing prompts.**
 
 ## Step 2 — Validation Logic
 
@@ -114,6 +114,12 @@ Content:
 
 Set `scope_flag: "large"` if the idea spans multiple unrelated domains or describes a platform rather than a focused product.
 
+**Compute `raw_idea_hash`:**
+```bash
+echo -n "{raw_idea}" | sha256sum | cut -c1-16
+```
+Use this command to generate the SHA-256 fingerprint (first 16 hex chars) of the raw idea text.
+
 **Atomic write protocol:**
 1. Create session directory: `mkdir -p {project-root}/.prd-sessions/{session-id}/tmp`
 2. Write JSON to `tmp/ledger.json.tmp`.
@@ -125,15 +131,27 @@ Set `scope_flag: "large"` if the idea spans multiple unrelated domains or descri
 
 Append to `{session-dir}/session.log`:
 ```
-[{timestamp}] [INFO] [prd-intake] END result=PASS|FAIL session={session-id}
+[{timestamp}] [INFO] [prd-intake] START session={session-id}
+[{timestamp}] [INFO] [prd-intake] END result=PASS|FAIL tokens_in={n} tokens_out={n} session={session-id}
 ```
+
+Token counts are required. Obtain from LLM response metadata.
 
 ## Output
 
+**Only these formats are allowed. No narrative text before or after.**
+
 ```
 INTAKE_RESULT: PASS
-SUMMARY: {the compressed summary written}
+SUMMARY: {one line summary}
 SESSION: {session-id}
+```
+
+```
+INTAKE_RESULT: FAIL
+REASON: {reason}
+DETAIL: {detail}
+RETRY: true|false
 ```
 
 ## Rules

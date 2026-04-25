@@ -44,9 +44,9 @@ The framework itself is installed globally (see `INSTALL.md`). The runtime artef
 Any agent that overwrites `ledger.json` or `questions.json` MUST follow the atomic write protocol:
 
 1. Write to `{session-dir}/tmp/{filename}.tmp`.
-2. Validate the temp file against its JSON schema (`schemas/ledger.schema.json` or `schemas/questions.schema.json`).
+2. Validate the temp file against its JSON schema (`schemas/ledger.schema.json` or `schemas/questions.schema.json`). **Validation is MANDATORY — not optional.**
 3. On validation pass: rename temp file to final destination.
-4. On validation fail: stop and report the error. Do NOT rename.
+4. On validation fail: stop and report the error. Do NOT rename. Return an error structured output.
 
 ### 3.3 Backup Rotation
 Before overwriting `ledger.json`, `prd-interviewer` MUST:

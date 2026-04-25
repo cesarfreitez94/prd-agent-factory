@@ -60,6 +60,8 @@ If this is the first write, `prd.md` is created and `prd_version` stays at 1.
 **Write:** `{session-dir}/prd.md` (and optionally `prd.v{n}.md`)
 Nothing else. No conversation history. No `questions.json`.
 
+If `general_summary_stale: true` is set in the ledger, recalculate the Executive Summary from `answered_context` rather than using `general_summary`.
+
 ## Generation Rules
 
 **Only write confirmed content.** Every feature, story, persona, metric, and constraint must trace to an entry in `ledger.json → answered_context`. Not there = not in the PRD.
@@ -221,11 +223,15 @@ Update `ledger.json` (atomic write, backup, schema validation):
 - `prd_status` → `"DRAFT"`
 - `prd_file` → `".prd-sessions/{session-id}/prd.md"`
 - `prd_version` → updated value (if bumped)
+- If `general_summary_stale: true`, recalculate Executive Summary from `answered_context` instead of `general_summary`
 
 Log:
 ```
-[{timestamp}] [INFO] [prd-writer] END result=COMPLETE file=prd.md version={n} session={session-id}
+[{timestamp}] [INFO] [prd-writer] START session={session-id}
+[{timestamp}] [INFO] [prd-writer] END result=COMPLETE file=prd.md version={n} tokens_in={n} tokens_out={n} session={session-id}
 ```
+
+Token counts are required. Obtain from LLM response metadata.
 
 Output:
 ```

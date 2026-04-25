@@ -33,6 +33,36 @@ Sigue `INSTALL.md` para copiar los agentes a `~/.config/opencode/`.
 
 Tu proyecto solo contendrá `.prd-config.json` (opcional) y `.prd-sessions/` (generado automáticamente). Los agentes (`agents/`, `schemas/`, `tests/`) viven en la instalación global, no en tu proyecto.
 
+## Flujo del Pipeline
+
+El pipeline tiene 5 etapas. Tú solo interactúas con `spec` — los subagentes trabajan silenciosamente.
+
+### Etapas
+
+| Etapa | Agente | Qué hace | Tu intervención |
+|-------|--------|----------|-----------------|
+| 1. Validación | prd-intake | Valida tu idea, detecta PII, crea sesión | Solo la idea inicial |
+| 2. Planificación | prd-planner | Genera preguntas priorizadas | Ninguna |
+| 3. Entrevista | prd-interviewer | Te hace preguntas (en batch si aplica) | Respuestas a preguntas de selección |
+| 4. Escritura | prd-writer | Genera el PRD desde tus respuestas | Ninguna |
+| 5. Validación | prd-validator | Verifica 18 checks + semántica | Ninguna |
+
+### Estados del pipeline
+
+- `INTAKE_FAIL` → Tu idea fue rechazada (vaga o fuera de límites). Reformula.
+- `IN_PROGRESS` → La entrevista está en curso. Sigue respondiendo.
+- `NEEDS_REVIEW` → El PRD requiere revisión manual después de 2 intentos fallidos.
+- `BLOCKED` → El PRD tiene errores críticos que no se pueden auto-corregir.
+- `FINAL` → El PRD está listo.
+
+### Cuándo intervienes
+
+Solo en dos momentos:
+1. **Al inicio:** Describe tu idea
+2. **Durante la entrevista:** Responde las preguntas de selección
+
+Todo lo demás es automático y silencioso.
+
 ---
 
 ## Principios de diseño

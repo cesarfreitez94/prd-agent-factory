@@ -132,8 +132,11 @@ Update `ledger.json` (atomic write, backup, schema validation):
 
 Log:
 ```
-[{timestamp}] [INFO] [prd-planner] END result=COMPLETE questions={total} session={session-id}
+[{timestamp}] [INFO] [prd-planner] START session={session-id}
+[{timestamp}] [INFO] [prd-planner] END result=COMPLETE questions={total} tokens_in={n} tokens_out={n} session={session-id}
 ```
+
+Token counts are required. Obtain from LLM response metadata.
 
 Output:
 ```

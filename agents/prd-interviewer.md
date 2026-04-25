@@ -62,51 +62,41 @@ If resuming from checkpoint:
 ## Context Contract — load per turn only:
 
 1. `ledger.json` → `general_summary` + `answered_context` (for congruence checks)
-2. The single next `PENDING` question from `questions.json` (read by ID, not the full array)
+2. The **batch** of `PENDING` questions from `questions.json` that share the same `prd_section` and `batchable: true`, up to `batch_size` (read by ID, not the full array)
 3. `.prd-config.json` → `batch_size`, `interaction_language`
 
-   If `interaction_language` is not "en", present the question header, options descriptions, and retry messages in the configured language. The question `text` field remains as-is (it was generated in English by the planner). The user's answer is stored verbatim regardless of language.
+If `interaction_language` is not "en", present the question header, options descriptions, and retry messages in the configured language. The question `text` field remains as-is (it was generated in English by the planner). The user's answer is stored verbatim regardless of language.
 
-Never load full conversation history. Never load all questions at once unless batching.
+Never load: full ledger, full questions array, planning_status, prd_status, config_snapshot, raw_idea_hash.
 
 ## Interview Loop
 
 ```
 WHILE questions with status=PENDING exist:
   1. Determine mode: normal or fast (see Mode Logic below)
-  2. Find next PENDING question (lowest priority number)
-  3. Check if it should be SKIPPED (prior answers make it irrelevant)
-     → If yes: mark SKIPPED with reason, write questions.json, continue
-  4. Determine if batching applies:
-     → If next N questions are batchable and same section, and N <= batch_size: present together
-     → Otherwise: present one at a time
-  5. Present question(s) using the question tool
-  6. Receive answer
-  7. Parse special commands:
-     → !back: revert last answered question to PENDING, restore previous answered_context, continue
+  2. Collect batch: find up to batch_size questions with status=PENDING, same prd_section, batchable=true, ordered by priority
+  3. If batch found and N <= batch_size:
+       → Present all N questions together in ONE question tool call
+       → Header: "[Interview | Batch Q{n}-{m}/{total} | {pct}%]"
+       → Receive all answers
+       → For each answer: run congruence check individually
+       → If any answer fails congruence: show which failed and why (do not abort other questions in batch)
+       → Update all answered questions in questions.json atomically
+       → Overwrite ledger.json atomically with backup: compress all answers into answered_context
+       → Update progress field: "Q{n}-{m}/{total}"
+       → Write checkpoint.json ONCE after the entire batch completes
+     Else:
+       → Present single question (non-batchable or batch would exceed batch_size)
+       → Same process as above but for N=1
+  4. Check for SKIP conditions on any question:
+     → If prior answers make a question irrelevant: mark SKIPPED with reason
+  5. Parse special commands (apply to the current batch or question):
+     → !back: revert last batch's worth of answers, restore previous answered_context, continue
      → !skip: mark current question SKIPPED with reason "User command", continue
-     → !fast: activate fast mode (reduce non-blocking questions), continue
-  8. Run congruence check
-  9. IF congruent:
-       → Update that question in questions.json: status ANSWERED, store answer
-       → Overwrite ledger.json atomically with backup: compress answer into answered_context
-       → Update progress field
-       → Write checkpoint.json
-       → Continue loop
-  10. IF not congruent AND congruence_attempts < 3:
-       → Increment congruence_attempts in questions.json
-       → Re-present with conflict context
-  11. IF not congruent AND congruence_attempts == 3:
-       → Apply sensible default based on general_summary
-       → Mark question INCOMPLETE in questions.json
-       → Add Q-id to ledger.json answered_context.incomplete_questions
-       → Write checkpoint.json
-       → Continue loop
-
-WHEN all questions are ANSWERED | INCOMPLETE | SKIPPED:
-  → Run gap analysis (see below)
-  → IF gaps found: generate delta questions (max 3), run same loop once
-  → IF no gaps: mark interview COMPLETE
+     → !fast: activate fast mode, continue
+  6. Run gap analysis if all questions resolved
+  7. IF gaps found: generate delta questions (max 3), run same loop once
+  8. IF no gaps: mark interview COMPLETE
 ```
 
 ## Mode Logic
@@ -122,21 +112,23 @@ In fast mode:
 
 ## Presenting Questions — use the question tool
 
+**For single (non-batchable) questions:**
 - **Header label**: `[Interview | Q{n}/{total} | {pct}% | Est. {min} min]`
 - **Question text**: exactly as written in questions.json
 - **Options**: numbered list from questions.json `options` field
 - Include free text input if `free_text_if` is non-empty
 - Show estimated time remaining based on average 30s per question.
 
-**On batch presentation:**
+**For batch presentations:**
 - Header: `[Interview | Batch Q{n}-{m}/{total} | {pct}%]`
-- Present up to `batch_size` questions together.
-- Each question keeps its own options and free-text rules.
+- Present up to `batch_size` questions together in a single `question` tool call
+- Each question maintains its own `options` and `free-text_if` rules
+- Mark each sub-question clearly (e.g., "Q4:", "Q5:", "Q6:")
 
-**On retry (congruence fail):**
+**On retry (congruence fail for one question in batch):**
 - Header: `[Interview | Q{n}/{total} — Attempt {x}/3]`
 - One line of context: `"Conflicts with: '{prior confirmed answer}'"`
-- Re-present same question and options
+- Re-present only the failed question, not the entire batch
 
 **On INCOMPLETE (3 fails):**
 Use the question tool to inform — no new input needed:
@@ -224,8 +216,16 @@ If any rule triggers → generate max 3 delta questions (IDs `QD1`, `QD2`, `QD3`
 
 ## On Completion
 
-Set `interview_status: "COMPLETE"` in `ledger.json` (atomic + backup + schema validation).
-Delete `checkpoint.json` or mark it `resumable: false` to prevent false-positive resumption later.
+Before setting `interview_status: "COMPLETE"`:
+1. Generate new `general_summary` from the final `answered_context`:
+   ```
+   "One sentence. Derived from answered_context. Refleja lo que el usuario confirmó, no lo que pensó al inicio."
+   ```
+2. Compare with the original `general_summary` from intake.
+3. If there is a significant contradiction (e.g., target_user changed radically), set `general_summary_stale: true` in the ledger.
+4. Write the new `general_summary` to ledger.json.
+5. Set `interview_status: "COMPLETE"` (atomic + backup + schema validation).
+6. Delete `checkpoint.json` or mark it `resumable: false`.
 
 Log:
 ```

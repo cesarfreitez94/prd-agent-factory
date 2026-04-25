@@ -7,8 +7,9 @@
   "properties": {
     "session_id":       { "type": "string", "pattern": "^prd-[0-9]{8}-[0-9]{6}$" },
     "created_at":       { "type": "string", "format": "date-time" },
-    "general_summary":  { "type": "string", "description": "Max 5 sentences. Zero invented details. Never changes after intake." },
-    "raw_idea_hash":    { "type": "string" },
+    "general_summary":  { "type": "string", "description": "Max 5 sentences. Zero invented details. Updated by interviewer on completion if answered_context contradicts the initial summary." },
+    "general_summary_stale": { "type": ["boolean", "null"], "description": "Set true by interviewer when answered_context contradicts the initial general_summary. Writer must recalculate Executive Summary from answered_context when true." },
+    "raw_idea_hash":    { "type": "string", "description": "SHA-256 fingerprint of the raw idea (first 16 hex chars)." },
     "intake_status":    { "type": "string", "enum": ["PASS", "FAIL", "PENDING"] },
     "scope_flag":       { "type": ["string", "null"], "enum": ["large", null] },
     "planning_status":  { "type": ["string", "null"], "enum": ["COMPLETE", "IN_PROGRESS", null] },

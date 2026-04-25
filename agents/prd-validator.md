@@ -54,6 +54,7 @@ Mark each PASS or FAIL with location.
 - [ ] **I5** — All Acceptance Criteria use `- [ ]` checkbox format
 - [ ] **I6** — Success metrics use format: `Current: X → Target: Y` or table with Target column populated
 - [ ] **I7** — No compound User Stories (one action + one outcome per story only)
+- [ ] **I8** — No mention of specific technology stack, architecture, or implementation decisions (DB, framework, cloud provider) unless explicitly confirmed in `answered_context.constraints`
 
 ### Traceability
 - [ ] **T1** — Every Out of Scope item traces to `answered_context.out_of_scope`
