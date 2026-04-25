@@ -75,6 +75,9 @@ Flujo interactivo:
     2) Revisar uno por uno (s/N/a/q)
     3) Seleccionar componentes
     4) Cancelar
+
+  Tras copiar los archivos, se consultará OpenRouter para configurar
+  el modelo de cada agente (o dejar el valor por defecto).
 EOF
 }
 
@@ -478,6 +481,427 @@ run_uninstall() {
 }
 
 # ============================================================================
+# Fetch modelos desde OpenRouter
+# ============================================================================
+fetch_models() {
+    if [[ "${DRY_RUN}" == true ]]; then
+        log_info "[dry-run] Se consultaría OpenRouter para modelos"
+        return
+    fi
+
+    log_info "Descargando catálogo de modelos desde OpenRouter..."
+
+    if ! command -v curl &>/dev/null; then
+        log_error "curl no está instalado. Es requerido para obtener modelos."
+        exit 1
+    fi
+
+    if ! command -v python3 &>/dev/null; then
+        log_error "python3 no está instalado. Es requerido para procesar modelos."
+        exit 1
+    fi
+
+    local tmp_response
+    tmp_response=$(mktemp)
+
+    if ! curl -s --fail https://openrouter.ai/api/v1/models -o "${tmp_response}"; then
+        rm -f "${tmp_response}"
+        log_error "No se pudo conectar a OpenRouter. Verifica tu conexión."
+        exit 1
+    fi
+
+    python3 - "${tmp_response}" "${SOURCE_DIR}/models.json" <<'PYEOF'
+import json, sys
+
+with open(sys.argv[1], 'r') as f:
+    data = json.load(f)
+
+models = data.get('data', [])
+providers = {}
+
+for m in models:
+    mid = m.get('id', '')
+    if '/' not in mid:
+        continue
+    prov = mid.split('/')[0]
+    if prov not in providers:
+        providers[prov] = []
+    pricing = m.get('pricing', {})
+    providers[prov].append({
+        'id': mid,
+        'name': m.get('name', mid),
+        'prompt': pricing.get('prompt', '?'),
+        'completion': pricing.get('completion', '?')
+    })
+
+priority = ['anthropic', 'openai', 'google', 'moonshotai']
+ordered = []
+
+for p in priority:
+    if p in providers:
+        ordered.append({'name': p, 'models': providers.pop(p)})
+
+for p in sorted(providers.keys(), key=lambda x: -len(providers[x])):
+    ordered.append({'name': p, 'models': providers[p]})
+
+output = {'providers': ordered}
+with open(sys.argv[2], 'w') as f:
+    json.dump(output, f, indent=2)
+
+print(len(models))
+PYEOF
+
+    local py_status=$?
+    rm -f "${tmp_response}"
+
+    if [[ $py_status -ne 0 ]]; then
+        log_error "Error procesando respuesta de OpenRouter."
+        exit 1
+    fi
+
+    log_ok "Catálogo descargado exitosamente."
+}
+
+# ============================================================================
+# Variables globales para selección
+# ============================================================================
+SELECTED_VALUE=""
+
+# ============================================================================
+# Seleccionar compañía (paginado)
+# ============================================================================
+# Guarda el índice del proveedor en SELECTED_VALUE.
+# Return: 0 = éxito, 1 = cancelado
+# ============================================================================
+select_company() {
+    SELECTED_VALUE=""
+    local models_file="${SOURCE_DIR}/models.json"
+
+    local providers_info
+    providers_info=$(python3 - "${models_file}" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+for i, p in enumerate(data['providers']):
+    print(f"{i}|{p['name']}|{len(p['models'])}")
+PYEOF
+)
+
+    local all_names=()
+    local all_counts=()
+    local total=0
+    while IFS='|' read -r idx name count; do
+        all_names+=("$name")
+        all_counts+=("$count")
+        ((total++)) || true
+    done <<< "$providers_info"
+
+    local offset=4
+    local per_page=10
+    local page=0
+
+    while true; do
+        echo
+        echo "Compañías disponibles:"
+        echo
+
+        for i in $(seq 0 $((offset - 1))); do
+            if [[ $i -lt $total ]]; then
+                printf "  %2d. %-25s %3s modelos\n" "$((i+1))" "${all_names[$i]}" "${all_counts[$i]}"
+            fi
+        done
+
+        echo "  ---"
+
+        local start=$((offset + page * per_page))
+        local end=$((start + per_page))
+        for i in $(seq $start $((end - 1))); do
+            if [[ $i -lt $total ]]; then
+                printf "  %2d. %-25s %3s modelos\n" "$((i+1))" "${all_names[$i]}" "${all_counts[$i]}"
+            fi
+        done
+
+        local rest_total=$((total - offset))
+        local total_pages=0
+        if [[ $rest_total -gt 0 ]]; then
+            total_pages=$(((rest_total + per_page - 1) / per_page))
+        fi
+        local current_page=$((page + 1))
+
+        echo
+        if [[ $total_pages -gt 1 ]]; then
+            echo "  Página ${current_page}/${total_pages}"
+        fi
+        if [[ $((page + 1)) -lt $total_pages ]]; then
+            echo "  n. Siguiente página"
+        fi
+        if [[ $page -gt 0 ]]; then
+            echo "  p. Página anterior"
+        fi
+        echo "  q. Cancelar / Saltar"
+        echo
+
+        read -r -p "Selecciona compañía [1-${total}, n, p, q]: " choice
+
+        case "$choice" in
+            [qQ])
+                return 1
+                ;;
+            [nN])
+                if [[ $((page + 1)) -lt $total_pages ]]; then
+                    ((page++)) || true
+                fi
+                ;;
+            [pP])
+                if [[ $page -gt 0 ]]; then
+                    ((page--)) || true
+                fi
+                ;;
+            *)
+                if [[ "$choice" =~ ^[0-9]+$ && "$choice" -ge 1 && "$choice" -le $total ]]; then
+                    SELECTED_VALUE="$((choice - 1))"
+                    return 0
+                fi
+                log_warn "Opción inválida."
+                ;;
+        esac
+    done
+}
+
+# ============================================================================
+# Seleccionar modelo (paginado, con precios, volver atrás)
+# ============================================================================
+# Guarda el id del modelo en SELECTED_VALUE.
+# Return: 0 = éxito, 1 = cancelado, 2 = volver atrás
+# ============================================================================
+select_model() {
+    SELECTED_VALUE=""
+    local provider_idx="$1"
+    local models_file="${SOURCE_DIR}/models.json"
+
+    local models_info
+    models_info=$(python3 - "$provider_idx" "$models_file" <<'PYEOF'
+import json, sys
+idx = int(sys.argv[1])
+with open(sys.argv[2]) as f:
+    data = json.load(f)
+p = data['providers'][idx]
+for i, m in enumerate(p['models']):
+    print(f"{i}|{m['id']}|{m['name']}|{m['prompt']}|{m['completion']}")
+PYEOF
+)
+
+    local all_ids=()
+    local all_names=()
+    local all_prompts=()
+    local all_completions=()
+    local total=0
+    while IFS='|' read -r idx id name prompt completion; do
+        all_ids+=("$id")
+        all_names+=("$name")
+        all_prompts+=("$prompt")
+        all_completions+=("$completion")
+        ((total++)) || true
+    done <<< "$models_info"
+
+    local per_page=10
+    local page=0
+    local total_pages=$(((total + per_page - 1) / per_page))
+
+    while true; do
+        echo
+        echo "Modelos disponibles:"
+        echo
+
+        local start=$((page * per_page))
+        local end=$((start + per_page))
+        for i in $(seq $start $((end - 1))); do
+            if [[ $i -lt $total ]]; then
+                local name="${all_names[$i]}"
+                local prompt="${all_prompts[$i]}"
+                local completion="${all_completions[$i]}"
+                printf "  %2d. %-45s  prompt \$%s  completion \$%s\n" "$((i+1))" "$name" "$prompt" "$completion"
+                echo "      ID: ${all_ids[$i]}"
+            fi
+        done
+
+        local current_page=$((page + 1))
+
+        echo
+        if [[ $total_pages -gt 1 ]]; then
+            echo "  Página ${current_page}/${total_pages}"
+        fi
+        if [[ $((page + 1)) -lt $total_pages ]]; then
+            echo "  n. Siguiente página"
+        fi
+        if [[ $page -gt 0 ]]; then
+            echo "  p. Página anterior"
+        fi
+        echo "  b. Volver a compañías"
+        echo "  q. Cancelar / Saltar"
+        echo
+
+        read -r -p "Selecciona modelo [1-${total}, n, p, b, q]: " choice
+
+        case "$choice" in
+            [qQ])
+                return 1
+                ;;
+            [bB])
+                return 2
+                ;;
+            [nN])
+                if [[ $((page + 1)) -lt $total_pages ]]; then
+                    ((page++)) || true
+                fi
+                ;;
+            [pP])
+                if [[ $page -gt 0 ]]; then
+                    ((page--)) || true
+                fi
+                ;;
+            *)
+                if [[ "$choice" =~ ^[0-9]+$ && "$choice" -ge 1 && "$choice" -le $total ]]; then
+                    SELECTED_VALUE="${all_ids[$((choice - 1))]}"
+                    return 0
+                fi
+                log_warn "Opción inválida."
+                ;;
+        esac
+    done
+}
+
+# ============================================================================
+# Configurar modelos de agentes
+# ============================================================================
+configure_agent_models() {
+    if [[ "${DRY_RUN}" == true ]]; then
+        log_info "[dry-run] Se saltaría configuración de modelos"
+        return
+    fi
+
+    if [[ ! -f "${SOURCE_DIR}/models.json" ]]; then
+        log_warn "No se encontró models.json. Se omite configuración de modelos."
+        return
+    fi
+
+    # Detectar agentes en destino
+    local agents=()
+    for f in "${TARGET_DIR}"/agents/*.md; do
+        [[ -f "$f" ]] || continue
+        local name
+        name=$(basename "$f" .md)
+        agents+=("$name")
+    done
+
+    if [[ ${#agents[@]} -eq 0 ]]; then
+        log_warn "No se encontraron agentes en ${TARGET_DIR}/agents/"
+        return
+    fi
+
+    echo
+    print_header "Configuración de Modelos para Agentes"
+    echo
+
+    echo "Agentes detectados:"
+    for agent in "${agents[@]}"; do
+        local current_model
+        current_model=$(grep -m1 '^model:' "${TARGET_DIR}/agents/${agent}.md" | sed 's/^model: *//' || true)
+        if [[ -z "$current_model" ]]; then
+            current_model="(no definido)"
+        fi
+        printf "  %-20s → %s\n" "$agent" "$current_model"
+    done
+    echo
+
+    read -r -p "¿Qué deseas hacer? [a(todos*) / s(uno a uno) / N(dejar)]: " choice
+    choice=${choice:-a}
+
+    local selected_model=""
+
+    case "$choice" in
+        [aA])
+            while true; do
+                local sc_status=0
+                select_company || sc_status=$?
+
+                if [[ $sc_status -ne 0 ]]; then
+                    log_info "Configuración de modelos cancelada."
+                    return
+                fi
+
+                local provider_idx="$SELECTED_VALUE"
+
+                local sm_status=0
+                select_model "$provider_idx" || sm_status=$?
+
+                if [[ $sm_status -eq 0 ]]; then
+                    selected_model="$SELECTED_VALUE"
+                    break
+                elif [[ $sm_status -eq 2 ]]; then
+                    continue
+                else
+                    log_info "Configuración de modelos cancelada."
+                    return
+                fi
+            done
+
+            log_info "Aplicando '$selected_model' a todos los agentes..."
+            for agent in "${agents[@]}"; do
+                if sed -i "s|^model: .*|model: ${selected_model}|" "${TARGET_DIR}/agents/${agent}.md" 2>/dev/null; then
+                    log_ok "  $agent"
+                else
+                    log_error "  Falló: $agent"
+                fi
+            done
+            ;;
+        [sS])
+            for agent in "${agents[@]}"; do
+                local current_model
+                current_model=$(grep -m1 '^model:' "${TARGET_DIR}/agents/${agent}.md" | sed 's/^model: *//' || true)
+                if [[ -z "$current_model" ]]; then
+                    current_model="(no definido)"
+                fi
+                echo
+                read -r -p "Agente '$agent' — actual: $current_model. ¿Cambiar? [s/N]: " change
+                if [[ "$change" =~ ^[sS]$ ]]; then
+                    while true; do
+                        local sc_status=0
+                        select_company || sc_status=$?
+
+                        if [[ $sc_status -ne 0 ]]; then
+                            break
+                        fi
+
+                        local provider_idx="$SELECTED_VALUE"
+
+                        local sm_status=0
+                        select_model "$provider_idx" || sm_status=$?
+
+                        if [[ $sm_status -eq 0 ]]; then
+                            local model="$SELECTED_VALUE"
+                            if sed -i "s|^model: .*|model: ${model}|" "${TARGET_DIR}/agents/${agent}.md" 2>/dev/null; then
+                                log_ok "  $agent → $model"
+                            else
+                                log_error "  Falló: $agent"
+                            fi
+                            break
+                        elif [[ $sm_status -eq 2 ]]; then
+                            continue
+                        else
+                            break
+                        fi
+                    done
+                fi
+            done
+            ;;
+        *)
+            log_info "Modelos no modificados."
+            ;;
+    esac
+}
+
+# ============================================================================
 # Parseo de argumentos
 # ============================================================================
 parse_args() {
@@ -512,6 +936,7 @@ main() {
 
     if [[ "${UNINSTALL}" == true ]]; then
         run_uninstall
+        rm -f "${SOURCE_DIR}/models.json"
         exit 0
     fi
 
@@ -519,6 +944,9 @@ main() {
     if [[ "${DRY_RUN}" == false ]]; then
         mkdir -p "${TARGET_DIR}"
     fi
+
+    # Fetch catálogo de modelos desde OpenRouter
+    fetch_models
 
     local existing_count
     existing_count=$(detect_existing)
@@ -530,6 +958,12 @@ main() {
         # Instalación limpia o dry-run
         run_fresh_install
     fi
+
+    # Configurar modelos de agentes (después de copiar archivos)
+    configure_agent_models
+
+    # Limpiar models.json temporal siempre
+    rm -f "${SOURCE_DIR}/models.json"
 
     # Verificación post-instalación (solo si no es dry-run)
     if [[ "${DRY_RUN}" == false ]]; then

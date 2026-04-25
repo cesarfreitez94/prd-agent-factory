@@ -31,6 +31,7 @@
   "prd_status": "DRAFT",
   "prd_file": ".prd-sessions/prd-20250422-100000/prd.md",
   "prd_version": 1,
+  "revision_count": 0,
   "config_snapshot": {
     "project_name": "Dog Walker App",
     "models": {

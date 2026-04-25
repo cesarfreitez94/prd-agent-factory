@@ -6,7 +6,7 @@ temperature: 0.0
 hidden: true
 permission:
   edit: allow
-  bash: deny
+  bash: allow
   webfetch: deny
   websearch: deny
 ---
@@ -85,7 +85,17 @@ Semantic failures count toward the total failure score.
 | 1–3 | ⚠️ REVISION — send back to writer once with fix instructions |
 | 4+ | ❌ BLOCKED — report to user, stop |
 
-**Revision rule is absolute: send to writer exactly once. If revised PRD still fails, set `prd_status: "NEEDS_REVIEW"` and report both failure lists.**
+**Revision rule is absolute: send to writer exactly once. If revised PRD still fails:**
+1. Set `prd_status: "NEEDS_REVIEW"` (terminal state — requires manual intervention)
+2. Log: `[INFO] [prd-validator] END result=NEEDS_REVIEW revision_count={n} failures={total}`
+
+**BLOCKED is always terminal.** Do not attempt revision. Report and stop.
+
+**State machine:**
+- If APPROVED → `prd_status: "FINAL"` (terminal)
+- If REVISION and `revision_count == 0` → increment `revision_count`, invoke `@prd-writer` with instructions
+- If REVISION and `revision_count >= 1` → `prd_status: "NEEDS_REVIEW"` (terminal)
+- If BLOCKED → `prd_status: "BLOCKED"` (terminal)
 
 ## Output Formats
 
@@ -142,12 +152,14 @@ Session files preserved at: .prd-sessions/{session-id}/
 
 ## After Completion
 
-Update `ledger.json → prd_status` (atomic write, backup, schema validation):
-- APPROVED → `"FINAL"`
-- Revision exhausted → `"NEEDS_REVIEW"`
-- Blocked → `"BLOCKED"`
+Update `ledger.json` (atomic write, backup, schema validation):
+- APPROVED → `prd_status: "FINAL"`
+- REVISION (first time) → `prd_status: "DRAFT"`, `revision_count: 1`
+- REVISION (exhausted) or BLOCKED → `prd_status: "NEEDS_REVIEW"` or `prd_status: "BLOCKED"` (terminal)
 
 Log:
+```
+[{timestamp}] [INFO] [prd-validator] END result=APPROVED|REVISION|NEEDS_REVIEW|BLOCKED revision_count={n} failures={total} semantic_failures={m} session={session-id}
 ```
 [{timestamp}] [INFO] [prd-validator] END result=APPROVED|REVISION|BLOCKED failures={n} semantic_failures={m} session={session-id}
 ```

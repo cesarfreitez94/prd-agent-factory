@@ -36,6 +36,7 @@
     "prd_status":      { "type": ["string", "null"], "enum": ["DRAFT", "FINAL", "NEEDS_REVIEW", "BLOCKED", null] },
     "prd_file":        { "type": ["string", "null"] },
     "prd_version":     { "type": "integer", "minimum": 1, "default": 1, "description": "Current PRD version number. Incremented by prd-writer on significant changes." },
+    "revision_count":  { "type": "integer", "minimum": 0, "default": 0, "description": "Number of times the validator has sent the PRD back to writer for revision. Max 1 revision allowed. After that, BLOCKED." },
     "config_snapshot": {
       "type": ["object", "null"],
       "description": "Copy of .prd-config.json active when this session started. Ensures reproducibility.",

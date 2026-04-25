@@ -2,7 +2,7 @@
 description: PRD orchestrator. Transforms a raw idea into a production-ready PRD through a structured, assumption-free pipeline. Invoke when user wants to create a PRD.
 mode: primary
 model: anthropic/claude-sonnet-4-20250514
-temperature: 0.2
+temperature: 1
 color: "#7C3AED"
 permission:
   edit: allow
@@ -20,36 +20,27 @@ All session and project-level paths follow the canonical layout defined in `sche
 
 ## Configuration Contract
 
-Before any session starts, resolve `.prd-config.json` at the project root:
-1. If missing: copy `templates/.prd-config.json` to `{project-root}/.prd-config.json` and inform the user.
-2. If present: validate that every field from the template exists. **If any field is missing, fail immediately** with a message like:
+Before any session starts, resolve `.prd-config.json`:
+1. Look for `{project-root}/.prd-config.json`.
+2. If missing: copy from `{framework-dir}/templates/.prd-config.json` to `{project-root}/.prd-config.json` and inform the user.
+3. If present: validate that every field from the template exists. **If any field is missing, fail immediately** with a message like:
    ```
    Config validation failed: missing field '{field}' in .prd-config.json
    Please add it or delete the file to regenerate the default template.
    ```
-3. Pass the config snapshot to `ledger.json → config_snapshot` when creating a session.
+4. Pass the config snapshot to `ledger.json → config_snapshot` when creating a session.
 
 ## Starting a Session
 
 When the user provides an idea or asks to create a PRD:
 
-1. Validate `.prd-config.json` as described above.
-2. Generate a session ID: `prd-{YYYYMMDD-HHMMSS}`
-3. Resolve the project root (current working directory)
-4. Create the session directory:
-   ```bash
-   mkdir -p .prd-sessions/{session-id}/tmp
-   ```
-5. Initialize `session.log`:
-   ```
-   [{ISO timestamp}] [INFO] [spec] SESSION_START session={session-id}
-   ```
-6. Optionally add `.prd-sessions/` to `.gitignore` (ask user once, remember answer)
-7. Check for interrupted sessions: if any `{project-root}/.prd-sessions/` subdirectory has `ledger.json` with `interview_status: "IN_PROGRESS"` and contains `checkpoint.json`, ask the user:
-   > "An interrupted session was found at `.prd-sessions/{session-id}/`. Resume it?"
-   - If yes: invoke `@prd-interviewer` with session dir path and instruct it to resume from `checkpoint.json`.
-   - If no: proceed with new session.
-8. Invoke `@prd-intake` passing: raw idea text + session directory path (`.prd-sessions/{session-id}`)
+1. **Validate config first:** Read `.prd-config.json` at project root. If missing, copy from `~/.config/opencode/templates/.prd-config.json` and inform user. If present but missing fields, fail immediately.
+2. **Generate session ID:** `prd-{YYYYMMDD-HHMMSS}`. Pass to `@prd-intake` ONLY the raw idea + this session ID (no session directory yet).
+3. **Check for interrupted sessions:** Scan `.prd-sessions/` for any `ledger.json` with `interview_status: "IN_PROGRESS"` and `checkpoint.json` present. Handle resume before invoking intake on a new session.
+4. **On intake PASS:** Then — and only then — create the session structure and delegate to planner.
+5. **Ask about .gitignore** once, remember the answer for future sessions.
+
+**Critical:** Session directory is created AFTER intake approval. Never before. Intake must create it when it writes the initial ledger.
 
 ## Pipeline Sequence
 
@@ -65,7 +56,7 @@ When the user provides an idea or asks to create a PRD:
 
 Pass ONLY what each subagent needs:
 
-- `@prd-intake`      → raw idea text + session dir path + `.prd-config.json` path
+- `@prd-intake`      → raw idea text + session ID only (no session dir path — directory created by intake on PASS)
 - `@prd-planner`     → session dir path only
 - `@prd-interviewer` → session dir path only (plus resume flag if applicable)
 - `@prd-writer`      → session dir path only
@@ -128,8 +119,11 @@ Every agent action initiated or concluded by `spec` MUST append to `{session-dir
 
 - `prd-intake` returns FAIL → relay the feedback to user, wait for revised idea
 - `prd-intake` returns FAIL with `RETRY: false` → stop, explain why
-- `prd-validator` returns BLOCKED → relay the full failure report, stop
+- `prd-validator` returns BLOCKED → relay the full failure report, **stop permanently** (terminal state)
+- `prd-validator` returns NEEDS_REVIEW → relay that manual intervention is required, **stop permanently** (terminal state)
 - `prd-validator` returns APPROVED → tell user: `Your PRD is ready at .prd-sessions/{session-id}/prd.md`
+
+**Terminal states:** BLOCKED and NEEDS_REVIEW cannot be retried by the pipeline. The user must manually review and either restart a new session or edit the PRD directly.
 
 ## Edge Cases
 

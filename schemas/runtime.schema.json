@@ -11,9 +11,10 @@
       "properties": {
         "prd_config": {
           "type": "object",
-          "description": "Project-level configuration (copied from templates/.prd-config.json if missing)",
+          "description": "Project-level configuration. Resolution order: 1) {project-root}/.prd-config.json, 2) if missing, copy from {framework-dir}/templates/.prd-config.json",
           "properties": {
             "path": { "type": "string", "const": "{project-root}/.prd-config.json" },
+            "template_source": { "type": "string", "const": "{framework-dir}/templates/.prd-config.json" },
             "created_by": { "type": "string", "const": "spec" },
             "read_by": { "type": "array", "items": { "type": "string" }, "const": ["spec", "prd-intake", "prd-planner", "prd-interviewer", "prd-writer", "prd-validator"] },
             "schema_ref": { "type": "string", "const": "templates/.prd-config.json" }
@@ -147,6 +148,18 @@
         "retention_days": { "type": "integer", "const": 90 }
       }
     },
+    "schema_resolution": {
+      "type": "object",
+      "description": "How agents locate JSON schemas at runtime. Search order: 1) {framework-dir}/schemas/, 2) {project-root}/.prd-sessions/{session-id}/schemas/",
+      "properties": {
+        "framework_schemas_dir": { "type": "string", "const": "{framework-dir}/schemas/" },
+        "local_schemas_dir": { "type": "string", "const": "{session-dir}/schemas/" },
+        "search_order": { "type": "array", "items": { "type": "string" }, "const": ["{framework-dir}/schemas/", "{session-dir}/schemas/"] },
+        "ledger_schema": { "type": "string", "const": "ledger.schema.json" },
+        "questions_schema": { "type": "string", "const": "questions.schema.json" },
+        "runtime_schema": { "type": "string", "const": "runtime.schema.json" }
+      }
+    },
     "agent_contracts": {
       "type": "object",
       "description": "Summary of which runtime files each agent touches. MUST match the detailed Context Contract inside each agent file.",
@@ -162,7 +175,7 @@
         "prd-intake": {
           "type": "object",
           "properties": {
-            "creates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/ledger.json"] },
+            "creates": { "type": "array", "items": { "type": "string" }, "const": ["{session-dir}/", "{session-dir}/ledger.json", "{session-dir}/tmp/", "{session-dir}/session.log"] },
             "reads": { "type": "array", "items": { "type": "string" }, "const": [".prd-config.json"] }
           }
         },
